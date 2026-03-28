@@ -88,6 +88,31 @@ void main() {
     expect(module.user?.name, 'Sara');
     expect(module.isLoggedIn, isTrue);
   });
+
+  test('deleteAccount clears local auth state on success', () async {
+    networkClient.postResponse = {
+      'token': 'abc123',
+      'user': {'id': 1, 'name': 'Ahmed', 'email': 'a@a.com'},
+      'message': 'ok',
+    };
+
+    final loginResult = await module.loginWithEmail(
+      email: 'a@a.com',
+      password: 'secret',
+    );
+    expect(loginResult.isSuccess, isTrue);
+    expect(module.isLoggedIn, isTrue);
+
+    networkClient.deleteResponse = {'message': 'deleted'};
+
+    final deleteResult = await module.deleteAccount();
+
+    expect(deleteResult.isSuccess, isTrue);
+    expect(module.token, isNull);
+    expect(module.user, isNull);
+    expect(module.isLoggedIn, isFalse);
+    expect(await tokenStorage.getToken(), isNull);
+  });
 }
 
 class _FakeNotificationModule {

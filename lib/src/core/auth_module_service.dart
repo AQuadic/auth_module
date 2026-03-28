@@ -351,6 +351,31 @@ class AuthModule {
     }
   }
 
+  Future<AuthResult<void>> deleteAccount() async {
+    final currentToken = await _getToken();
+    if (currentToken == null || currentToken.isEmpty) {
+      return AuthResult.failure('Not authenticated.');
+    }
+
+    final value = await _safeDelete(
+      config.deleteAccountEndpoint,
+      token: currentToken,
+    );
+
+    if (value is! Response) {
+      return AuthResult.failure(_resolveErrorMessage(value));
+    }
+
+    String? message;
+    final data = value.data;
+    if (data is Map<String, dynamic>) {
+      message = data[config.messageResponseKey]?.toString();
+    }
+
+    await logout(callApi: false);
+    return AuthResult.success(message: message);
+  }
+
   Future<AuthResult<void>> logout({bool callApi = true}) async {
     final currentToken = await _getToken();
     if (callApi && currentToken != null && currentToken.isNotEmpty) {
@@ -429,6 +454,18 @@ class AuthModule {
         token: token,
         cancelToken: cancelToken,
       );
+    } catch (e) {
+      return e.toString();
+    }
+  }
+
+  Future<dynamic> _safeDelete(
+    String endpoint, {
+    Map<String, dynamic>? body,
+    String? token,
+  }) async {
+    try {
+      return await _networkClient.delete(endpoint, body: body, token: token);
     } catch (e) {
       return e.toString();
     }

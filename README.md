@@ -7,6 +7,7 @@ Supports:
 - Phone + country + password login
 - Phone + country login without password (OTP flow with CloudWA/check-state pattern)
 - Sign up
+- Delete account
 - Token persistence
 - Current user getter, token getter, and `isLoggedIn`
 - Direct integration with your notification module for `addDevice`
@@ -181,6 +182,16 @@ if (result.isSuccess) {
 
 ```dart
 await auth.logout();
+```
+
+### Delete account
+
+```dart
+final result = await auth.deleteAccount();
+
+if (result.isSuccess) {
+	// Local auth state is cleared automatically.
+}
 ```
 
 ## Config options
