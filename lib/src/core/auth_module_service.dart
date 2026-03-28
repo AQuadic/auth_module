@@ -246,7 +246,11 @@ class AuthModule {
       }),
     );
 
-    return _handleAuthResponse(value);
+    final result = await _handleAuthResponse(value);
+    if (result.isSuccess) {
+      await addDevice();
+    }
+    return result;
   }
 
   Future<AuthResult<UserModel>> updateUser({
