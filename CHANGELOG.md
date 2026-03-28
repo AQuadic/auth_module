@@ -10,3 +10,4 @@
 * Updated `signUp()` API to accept optional `image` as multipart file and removed the `extra` parameter.
 * Added `editUser()` API with multipart profile update support, including optional image upload (`XFile`).
 * Added test coverage for `fetchCurrentUser()` success with stored token and direct user JSON payload.
+* Added `deleteAccount()` API to call configured delete endpoint and clear local auth state on success.
