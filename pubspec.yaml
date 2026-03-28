@@ -1,0 +1,32 @@
+name: auth_module
+description: "Logic-only authentication module for Flutter projects."
+version: 0.0.1
+homepage:
+
+environment:
+  sdk: ^3.10.4
+  flutter: ">=1.17.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  json_annotation: ^4.9.0
+  dio: ^5.9.0
+  flutter_bloc: ^9.1.1
+  shared_preferences: ^2.5.5
+  cross_file: ^0.3.4+2
+  aq_tools:
+    git:
+      url: https://github.com/AQuadic/aq_flutter_tools.git
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+  
+
+
+
+# The following section is specific to Flutter packages.
+flutter:
+
