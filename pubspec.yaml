@@ -18,6 +18,8 @@ dependencies:
   aq_tools:
     git:
       url: https://github.com/AQuadic/aq_flutter_tools.git
+  google_sign_in : ^7.2.0
+  sign_in_with_apple : ^7.0.1
 
 dev_dependencies:
   flutter_test:

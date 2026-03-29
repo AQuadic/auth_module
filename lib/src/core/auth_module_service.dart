@@ -9,14 +9,17 @@ import '../network/dio_helper_network_client.dart';
 import '../storage/auth_token_storage.dart';
 import '../storage/shared_prefs_auth_token_storage.dart';
 import 'auth_module_config.dart';
+import 'social_sign_in_client.dart';
 
 class AuthModule {
   AuthModule({
     required AuthNetworkClient networkClient,
     required this.config,
     required this.notificationModule,
+    SocialSignInClient? socialSignInClient,
     AuthTokenStorage? tokenStorage,
   }) : _networkClient = networkClient,
+       _socialSignInClient = socialSignInClient ?? PluginSocialSignInClient(),
        _tokenStorage =
            tokenStorage ??
            SharedPrefsAuthTokenStorage(key: config.persistTokenStorageKey);
@@ -25,17 +28,20 @@ class AuthModule {
     required dynamic dioHelper,
     required dynamic notificationModule,
     AuthModuleConfig config = const AuthModuleConfig(),
+    SocialSignInClient? socialSignInClient,
     AuthTokenStorage? tokenStorage,
   }) {
     return AuthModule(
       networkClient: DioHelperNetworkClient(dioHelper),
       config: config,
       notificationModule: notificationModule,
+      socialSignInClient: socialSignInClient,
       tokenStorage: tokenStorage,
     );
   }
 
   final AuthNetworkClient _networkClient;
+  final SocialSignInClient _socialSignInClient;
   final AuthTokenStorage _tokenStorage;
 
   final AuthModuleConfig config;
@@ -85,6 +91,57 @@ class AuthModule {
     );
 
     return _handleAuthResponse(value);
+  }
+
+  Future<AuthResult<UserModel>> loginWithSocial({
+    required String provider,
+    required String accessToken,
+    String? idToken,
+  }) async {
+    if (!_isNotBlank(provider)) {
+      return AuthResult.failure('Provider is required.');
+    }
+    if (!_isNotBlank(accessToken)) {
+      return AuthResult.failure('Access token is required.');
+    }
+
+    final body = <String, dynamic>{
+      'provider': provider,
+      'access_token': accessToken,
+      if (_isNotBlank(idToken)) 'id_token': idToken,
+    };
+
+    final value = await _safePost(config.socialLoginEndpoint, body: body);
+    return _handleAuthResponse(value);
+  }
+
+  Future<AuthResult<UserModel>> loginWithConfiguredSocial({
+    String? provider,
+  }) async {
+    final selectedProvider = provider ?? config.socialLoginProvider;
+    if (!_isNotBlank(selectedProvider)) {
+      return AuthResult.failure(
+        'Social provider is not configured. Set socialLoginProvider in AuthModuleConfig or pass provider.',
+      );
+    }
+
+    final signInResult = await _socialSignInClient.signIn(
+      provider: selectedProvider!,
+      config: config,
+    );
+
+    if (!signInResult.isSuccess || signInResult.credentials == null) {
+      return AuthResult.failure(
+        signInResult.message ?? 'Social sign-in failed.',
+      );
+    }
+
+    final credentials = signInResult.credentials!;
+    return loginWithSocial(
+      provider: credentials.provider,
+      accessToken: credentials.accessToken,
+      idToken: credentials.idToken,
+    );
   }
 
   Future<AuthResult<void>> requestPhoneOtpLogin({
