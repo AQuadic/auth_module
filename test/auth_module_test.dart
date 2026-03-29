@@ -74,7 +74,7 @@ void main() {
 
   test('Get current user with valid token', () async {
     await tokenStorage.saveToken('valid-token');
-    networkClient.postResponse = {
+    networkClient.getResponse = {
       'id': 3,
       'name': 'Sara',
       'email': 'sara@sara.com',
@@ -129,6 +129,7 @@ class _FakeNotificationModule {
 
 class _FakeNetworkClient implements AuthNetworkClient {
   dynamic postResponse;
+  dynamic getResponse;
   dynamic deleteResponse;
 
   @override
@@ -154,6 +155,17 @@ class _FakeNetworkClient implements AuthNetworkClient {
       Response(
         requestOptions: RequestOptions(path: endpoint),
         data: postResponse ?? {'success': false, 'error': 'missing'},
+        statusCode: 200,
+      ),
+    );
+  }
+
+  @override
+  Future get(String endpoint, {Map<String, dynamic>? body, String? token}) {
+    return Future.value(
+      Response(
+        requestOptions: RequestOptions(path: endpoint),
+        data: getResponse ?? {'success': false, 'error': 'missing'},
         statusCode: 200,
       ),
     );

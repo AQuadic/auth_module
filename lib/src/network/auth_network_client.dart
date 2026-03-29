@@ -9,6 +9,12 @@ abstract class AuthNetworkClient {
     CancelToken? cancelToken,
   });
 
+  Future<dynamic> get(
+    String endpoint, {
+    Map<String, dynamic>? body,
+    String? token,
+  });
+
   Future<dynamic> delete(
     String endpoint, {
     Map<String, dynamic>? body,

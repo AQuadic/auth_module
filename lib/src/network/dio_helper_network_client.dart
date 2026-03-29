@@ -25,6 +25,15 @@ class DioHelperNetworkClient implements AuthNetworkClient {
   }
 
   @override
+  Future<dynamic> get(
+    String endpoint, {
+    Map<String, dynamic>? body,
+    String? token,
+  }) async {
+    return dioHelper.getData(endpoint, body: body, token: token);
+  }
+
+  @override
   Future<dynamic> delete(
     String endpoint, {
     Map<String, dynamic>? body,

@@ -310,7 +310,7 @@ class AuthModule {
 
   Future<AuthResult<UserModel>> fetchCurrentUser() async {
     final currentToken = await _getToken();
-    final value = await _safePost(config.userEndpoint, token: currentToken);
+    final value = await _safeGet(config.userEndpoint, token: currentToken);
 
     if (value is! Response) {
       return AuthResult.failure(_resolveErrorMessage(value));
@@ -470,6 +470,18 @@ class AuthModule {
   }) async {
     try {
       return await _networkClient.delete(endpoint, body: body, token: token);
+    } catch (e) {
+      return e.toString();
+    }
+  }
+
+  Future<dynamic> _safeGet(
+    String endpoint, {
+    Map<String, dynamic>? body,
+    String? token,
+  }) async {
+    try {
+      return await _networkClient.get(endpoint, body: body, token: token);
     } catch (e) {
       return e.toString();
     }
