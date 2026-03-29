@@ -1,7 +1,6 @@
 class AuthModuleConfig {
   const AuthModuleConfig({
     this.isAdmin = false,
-    this.socialLoginProvider,
     this.googleClientId,
     this.googleAuthScopes = const ['email'],
     this.appleClientId,
@@ -9,7 +8,6 @@ class AuthModuleConfig {
   });
 
   final bool isAdmin;
-  final String? socialLoginProvider;
   final String? googleClientId;
   final List<String> googleAuthScopes;
   final String? appleClientId;
