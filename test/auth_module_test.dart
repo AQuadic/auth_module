@@ -47,7 +47,7 @@ void main() {
   });
 
   test(
-    'loginWithSocial stores user and token using default endpoint',
+    'loginWithSocial stores user and token using selected provider',
     () async {
       networkClient.postResponse = {
         'token': 'social-token',
@@ -55,16 +55,23 @@ void main() {
         'message': 'ok',
       };
 
+      socialSignInClient.result = const SocialSignInResult.success(
+        SocialSignInCredentials(
+          provider: 'google',
+          accessToken: 'google-access',
+          idToken: 'google-id',
+        ),
+      );
+
       final result = await module.loginWithSocial(
-        provider: 'google',
-        accessToken: 'google-access',
-        idToken: 'google-id',
+        provider: SocialProvider.google,
       );
 
       expect(result.isSuccess, isTrue);
       expect(module.token, 'social-token');
       expect(module.user?.name, 'Google User');
       expect(await tokenStorage.getToken(), 'social-token');
+      expect(socialSignInClient.lastProvider, 'google');
       expect(networkClient.lastPostBody?['provider'], 'google');
       expect(networkClient.lastPostBody?['access_token'], 'google-access');
       expect(networkClient.lastPostBody?['id_token'], 'google-id');
@@ -88,103 +95,35 @@ void main() {
         'message': 'ok',
       };
 
+      socialSignInClient.result = const SocialSignInResult.success(
+        SocialSignInCredentials(
+          provider: 'apple',
+          accessToken: 'apple-access',
+        ),
+      );
+
       final result = await module.loginWithSocial(
-        provider: 'apple',
-        accessToken: 'apple-access',
+        provider: SocialProvider.apple,
       );
 
       expect(result.isSuccess, isTrue);
+      expect(socialSignInClient.lastProvider, 'apple');
       expect(networkClient.lastPostEndpoint, 'admin/social');
       expect(networkClient.lastPostBody?['provider'], 'apple');
       expect(networkClient.lastPostBody?['access_token'], 'apple-access');
     },
   );
 
-  test('loginWithConfiguredSocial uses provider from config', () async {
-    module = AuthModule(
-      networkClient: networkClient,
-      tokenStorage: tokenStorage,
-      config: const AuthModuleConfig(socialLoginProvider: 'google'),
-      notificationModule: notificationModule,
-      socialSignInClient: socialSignInClient,
-    );
-
-    socialSignInClient.result = const SocialSignInResult.success(
-      SocialSignInCredentials(
-        provider: 'google',
-        accessToken: 'config-access-token',
-        idToken: 'config-id-token',
-      ),
-    );
-
-    networkClient.postResponse = {
-      'token': 'social-by-config',
-      'user': {'id': 11, 'name': 'Provider Config User', 'email': 'pc@c.com'},
-      'message': 'ok',
-    };
-
-    final result = await module.loginWithConfiguredSocial();
-
-    expect(result.isSuccess, isTrue);
-    expect(socialSignInClient.lastProvider, 'google');
-    expect(networkClient.lastPostEndpoint, 'user/social');
-    expect(networkClient.lastPostBody?['provider'], 'google');
-    expect(networkClient.lastPostBody?['access_token'], 'config-access-token');
-    expect(networkClient.lastPostBody?['id_token'], 'config-id-token');
-  });
-
-  test('loginWithConfiguredSocial fails when provider is not set', () async {
-    final result = await module.loginWithConfiguredSocial();
-
-    expect(result.isSuccess, isFalse);
-    expect(result.error, contains('Social provider is not configured'));
-  });
-
-  test('loginWithConfiguredSocial returns provider sign-in failure', () async {
-    module = AuthModule(
-      networkClient: networkClient,
-      tokenStorage: tokenStorage,
-      config: const AuthModuleConfig(socialLoginProvider: 'apple'),
-      notificationModule: notificationModule,
-      socialSignInClient: socialSignInClient,
-    );
-
+  test('loginWithSocial returns provider sign-in failure', () async {
     socialSignInClient.result = const SocialSignInResult.failure(
       'user cancelled',
     );
 
-    final result = await module.loginWithConfiguredSocial();
+    final result = await module.loginWithSocial(provider: SocialProvider.apple);
 
     expect(result.isSuccess, isFalse);
     expect(result.error, 'user cancelled');
     expect(networkClient.lastPostEndpoint, isNull);
-  });
-
-  test('loginWithConfiguredSocial can override configured provider', () async {
-    module = AuthModule(
-      networkClient: networkClient,
-      tokenStorage: tokenStorage,
-      config: const AuthModuleConfig(socialLoginProvider: 'google'),
-      notificationModule: notificationModule,
-      socialSignInClient: socialSignInClient,
-    );
-
-    socialSignInClient.result = const SocialSignInResult.success(
-      SocialSignInCredentials(provider: 'apple', accessToken: 'apple-token'),
-    );
-
-    networkClient.postResponse = {
-      'token': 'override-provider-token',
-      'user': {'id': 12, 'name': 'Override User', 'email': 'o@o.com'},
-      'message': 'ok',
-    };
-
-    final result = await module.loginWithConfiguredSocial(provider: 'apple');
-
-    expect(result.isSuccess, isTrue);
-    expect(socialSignInClient.lastProvider, 'apple');
-    expect(networkClient.lastPostBody?['provider'], 'apple');
-    expect(networkClient.lastPostBody?['access_token'], 'apple-token');
   });
 
   test('requestPhoneOtpLogin keeps temporary token and user', () async {
@@ -257,10 +196,41 @@ void main() {
     expect(module.isLoggedIn, isFalse);
     expect(await tokenStorage.getToken(), isNull);
   });
+
+  test('logout clears local auth state and calls logout endpoint by default', () async {
+    networkClient.postResponse = {
+      'token': 'abc123',
+      'user': {'id': 1, 'name': 'Ahmed', 'email': 'a@a.com'},
+      'message': 'ok',
+    };
+
+    final loginResult = await module.loginWithEmail(
+      email: 'a@a.com',
+      password: 'secret',
+    );
+    expect(loginResult.isSuccess, isTrue);
+
+    networkClient.postResponse = {'message': 'logged out'};
+
+    final logoutResult = await module.logout();
+
+    expect(logoutResult.isSuccess, isTrue);
+    expect(networkClient.lastPostEndpoint, 'user/logout');
+    expect(module.token, isNull);
+    expect(module.tempToken, isNull);
+    expect(module.user, isNull);
+    expect(module.otpResponse, isNull);
+    expect(module.isLoggedIn, isFalse);
+    expect(await tokenStorage.getToken(), isNull);
+    expect(notificationModule.token, isNull);
+    expect(notificationModule.deleteTokenCalled, isTrue);
+  });
+
 }
 
 class _FakeNotificationModule {
   String? token;
+  bool deleteTokenCalled = false;
 
   Future<void> setToken(String? value) async {
     token = value;
@@ -268,7 +238,9 @@ class _FakeNotificationModule {
 
   Future<void> addDevice({bool? enabled}) async {}
 
-  Future<void> deleteFCMToken() async {}
+  Future<void> deleteFCMToken() async {
+    deleteTokenCalled = true;
+  }
 }
 
 class _FakeNetworkClient implements AuthNetworkClient {
