@@ -8,6 +8,7 @@ Supports:
 - Phone + country login without password (OTP flow with CloudWA/check-state pattern)
 - Social login token exchange (Google/Apple)
 - Sign up
+- Profile update
 - Delete account
 - Token persistence
 - Current user getter, token getter, and `isLoggedIn`
@@ -119,61 +120,25 @@ await auth.resendOtp(
 );
 ```
 
-### 4) Social login (manual token exchange)
+### 4) Social login
 
-You can still pass provider tokens manually:
+`auth_module` now handles provider sign-in first, then sends tokens to your backend.
 
 ```dart
 final result = await auth.loginWithSocial(
-	provider: 'google',
-	accessToken: googleAccessToken,
-	idToken: googleIdToken, // optional
+	provider: SocialProvider.google,
 );
 ```
 
-Expected request body:
-
-```json
-{
-	"provider": "google",
-	"access_token": "...",
-	"id_token": "..."
-}
-```
-
-### 5) Social login (provider from config)
-
-If you want the module to trigger Google/Apple sign-in itself, set `socialLoginProvider`
-in `AuthModuleConfig`, then call `loginWithConfiguredSocial()`.
+Use Apple:
 
 ```dart
-final auth = AuthModule.init(
-	dioHelper: DioHelper.instance,
-	notificationModule: NotificationModule.instance,
-	config: const AuthModuleConfig(
-		socialLoginProvider: 'google',
-		googleClientId: 'your-google-oauth-client-id.apps.googleusercontent.com',
-	),
-);
-
-final result = await auth.loginWithConfiguredSocial();
-```
-
-Apple config example:
-
-```dart
-const config = AuthModuleConfig(
-	socialLoginProvider: 'apple',
-	appleClientId: 'com.example.apple',
-	appleRedirectUri: 'https://example.com/auth/apple/callback',
+final result = await auth.loginWithSocial(
+	provider: SocialProvider.apple,
 );
 ```
 
-You can override the configured provider at call time:
-
-```dart
-await auth.loginWithConfiguredSocial(provider: 'apple');
-```
+You still configure provider SDK options in `AuthModuleConfig` (for example `googleClientId`, `googleAuthScopes`, `appleClientId`, `appleRedirectUri`).
 
 ### Sign up
 
@@ -328,7 +293,7 @@ Use your project-level social login settings in `android/app/src/main/AndroidMan
 </manifest>
 ```
 
-After setup, use either `loginWithConfiguredSocial()` or manual `loginWithSocial(...)`.
+After setup, use `loginWithSocial(provider: SocialProvider.google)` or `loginWithSocial(provider: SocialProvider.apple)`.
 
 ## Tests
 
