@@ -1,6 +1,7 @@
 library;
 
 export 'src/core/auth_module_config.dart';
+export 'src/core/auth_module_enum.dart';
 export 'src/core/auth_module_service.dart';
 export 'src/core/social_sign_in_client.dart';
 export 'src/models/auth_result.dart';
