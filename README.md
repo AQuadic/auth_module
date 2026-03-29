@@ -6,20 +6,20 @@ Supports:
 - Email + password login
 - Phone + country + password login
 - Phone + country login without password (OTP flow with CloudWA/check-state pattern)
+- Social login token exchange (Google/Apple)
 - Sign up
 - Delete account
 - Token persistence
 - Current user getter, token getter, and `isLoggedIn`
 - Direct integration with your notification module for `addDevice`
 
-> Social login is intentionally excluded.
-
 ## Install
 
 ```yaml
 dependencies:
 	auth_module:
-		path: ../auth_module
+		git:
+      		url: https://github.com/scilton/auth_module.git
 ```
 
 Then run:
@@ -47,9 +47,9 @@ await auth.init();
 ## Endpoint mode
 
 - `isAdmin: false` (default) uses:
-  - `user/user`, `user/login`, `user/signup`, `user/logout`, `user/resend`, `user/verify`, `user/update`, `user/verifyInfo`, `user/otp/check`, `user/destroy`
+	- `user/user`, `user/login`, `user/social`, `user/signup`, `user/logout`, `user/resend`, `user/verify`, `user/update`, `user/verifyInfo`, `user/otp/check`, `user/destroy`
 - `isAdmin: true` uses:
-  - `admin/getCurrentAdmin`, `admin/login`, `admin/signup`, `admin/logout`, `admin/resend`, `admin/verify`, `admin/forgot`, `admin/change_password`, `admin/update`, `admin/verifyInfo`, `admin/otp/check`, `admin/destroy`
+	- `admin/getCurrentAdmin`, `admin/login`, `admin/social`, `admin/signup`, `admin/logout`, `admin/resend`, `admin/verify`, `admin/forgot`, `admin/change_password`, `admin/update`, `admin/verifyInfo`, `admin/otp/check`, `admin/destroy`
 
 ## API usage
 
@@ -117,6 +117,62 @@ await auth.resendOtp(
 	phoneCountry: 'SA',
 	isNew: true,
 );
+```
+
+### 4) Social login (manual token exchange)
+
+You can still pass provider tokens manually:
+
+```dart
+final result = await auth.loginWithSocial(
+	provider: 'google',
+	accessToken: googleAccessToken,
+	idToken: googleIdToken, // optional
+);
+```
+
+Expected request body:
+
+```json
+{
+	"provider": "google",
+	"access_token": "...",
+	"id_token": "..."
+}
+```
+
+### 5) Social login (provider from config)
+
+If you want the module to trigger Google/Apple sign-in itself, set `socialLoginProvider`
+in `AuthModuleConfig`, then call `loginWithConfiguredSocial()`.
+
+```dart
+final auth = AuthModule.init(
+	dioHelper: DioHelper.instance,
+	notificationModule: NotificationModule.instance,
+	config: const AuthModuleConfig(
+		socialLoginProvider: 'google',
+		googleClientId: 'your-google-oauth-client-id.apps.googleusercontent.com',
+	),
+);
+
+final result = await auth.loginWithConfiguredSocial();
+```
+
+Apple config example:
+
+```dart
+const config = AuthModuleConfig(
+	socialLoginProvider: 'apple',
+	appleClientId: 'com.example.apple',
+	appleRedirectUri: 'https://example.com/auth/apple/callback',
+);
+```
+
+You can override the configured provider at call time:
+
+```dart
+await auth.loginWithConfiguredSocial(provider: 'apple');
 ```
 
 ### Sign up
@@ -198,9 +254,81 @@ if (result.isSuccess) {
 
 `AuthModuleConfig` lets you customize:
 - mode (`isAdmin`)
+- social provider (`socialLoginProvider`: `google` or `apple`)
+- Google setup (`googleClientId`, `googleAuthScopes`)
+- Apple setup (`appleClientId`, `appleRedirectUri`)
 - response keys (`token`, `user`, `message`, `otp_callback`, `reference`)
 - default verify types (`whatsapp`, `mail_otp`, `new`)
 - persisted token key
+
+### AuthModuleConfig example
+
+```dart
+const config = AuthModuleConfig(isAdmin: false);
+```
+
+Configured provider example:
+
+```dart
+const config = AuthModuleConfig(
+	isAdmin: false,
+	socialLoginProvider: 'google',
+	googleClientId: 'your-google-oauth-client-id.apps.googleusercontent.com',
+);
+```
+
+## Android social setup
+
+`auth_module` can trigger social provider login if configured,
+but native provider setup still belongs to the consuming app.
+
+### Required app files
+
+- `android/app/google-services.json`
+- `ios/Runner/GoogleService-Info.plist`
+
+### AndroidManifest.xml example
+
+Use your project-level social login settings in `android/app/src/main/AndroidManifest.xml`:
+
+```xml
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+	<uses-permission android:name="android.permission.INTERNET"/>
+
+	<application
+			android:label="YourApp"
+			android:name="${applicationName}"
+			android:icon="@mipmap/ic_launcher">
+		<activity
+				android:name=".MainActivity"
+				android:exported="true"
+				android:launchMode="singleTop"
+				android:theme="@style/LaunchTheme"
+				android:configChanges="orientation|keyboardHidden|keyboard|screenSize|smallestScreenSize|locale|layoutDirection|fontScale|screenLayout|density|uiMode"
+				android:hardwareAccelerated="true"
+				android:windowSoftInputMode="adjustResize">
+			<intent-filter>
+				<action android:name="android.intent.action.MAIN"/>
+				<category android:name="android.intent.category.LAUNCHER"/>
+			</intent-filter>
+		</activity>
+
+		<activity
+				android:name="com.aboutyou.dart_packages.sign_in_with_apple.SignInWithAppleCallback"
+				android:exported="true">
+			<intent-filter>
+				<action android:name="android.intent.action.VIEW"/>
+				<category android:name="android.intent.category.DEFAULT"/>
+				<category android:name="android.intent.category.BROWSABLE"/>
+				<data android:scheme="signinwithapple"/>
+				<data android:path="callback"/>
+			</intent-filter>
+		</activity>
+	</application>
+</manifest>
+```
+
+After setup, use either `loginWithConfiguredSocial()` or manual `loginWithSocial(...)`.
 
 ## Tests
 
