@@ -20,7 +20,7 @@ Supports:
 dependencies:
 	auth_module:
 		git:
-      		url: https://github.com/scilton/auth_module.git
+      		url: https://github.com/aquadic/auth_module.git
 ```
 
 Then run:
