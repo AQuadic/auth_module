@@ -1,3 +1,8 @@
+## 0.0.6
+
+* Added package executable `dart run auth_module:add_apple_signin_configs` to configure Apple Sign-In for both Android and iOS in one command.
+* Improved `DioHelperNetworkClient` compatibility to support helper implementations using either `query` or `body` named parameters for GET/DELETE calls.
+
 ## 0.0.5
 
 * Refactored `AuthModule` implementation into service-focused Dart part files for better maintainability.
