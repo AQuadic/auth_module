@@ -265,19 +265,10 @@ Use your project-level social login settings in `android/app/src/main/AndroidMan
 			android:name="${applicationName}"
 			android:icon="@mipmap/ic_launcher">
 		<activity
-				android:name=".MainActivity"
-				android:exported="true"
-				android:launchMode="singleTop"
-				android:theme="@style/LaunchTheme"
-				android:configChanges="orientation|keyboardHidden|keyboard|screenSize|smallestScreenSize|locale|layoutDirection|fontScale|screenLayout|density|uiMode"
-				android:hardwareAccelerated="true"
-				android:windowSoftInputMode="adjustResize">
-			<intent-filter>
-				<action android:name="android.intent.action.MAIN"/>
-				<category android:name="android.intent.category.LAUNCHER"/>
-			</intent-filter>
+			...
 		</activity>
 
+		<!-- Add this config in file -->
 		<activity
 				android:name="com.aboutyou.dart_packages.sign_in_with_apple.SignInWithAppleCallback"
 				android:exported="true">
@@ -292,6 +283,23 @@ Use your project-level social login settings in `android/app/src/main/AndroidMan
 	</application>
 </manifest>
 ```
+
+### Add Apple signin configrations (ios/android) automatically (from this module)
+
+If this module is added from Git in your app dependencies, run this command directly from your app root:
+**Before running the command, ensure that the capability is enabled in Xcode → Signing & Capabilities**
+
+```bash
+dart run auth_module:add_apple_signin_configs
+```
+
+This one command configures both:
+- `android/app/src/main/AndroidManifest.xml` (adds `SignInWithAppleCallback` activity)
+- `ios/Runner/Runner.entitlements` (adds `com.apple.developer.applesignin` key)
+
+If `ios/Runner/Runner.entitlements` does not exist, the command creates it and ensures this is set in `ios/Runner.xcodeproj/project.pbxproj` under Debug/Release/Profile `buildSettings`:
+
+----
 
 After setup, use `loginWithSocial(provider: SocialProvider.google)` or `loginWithSocial(provider: SocialProvider.apple)`.
 
