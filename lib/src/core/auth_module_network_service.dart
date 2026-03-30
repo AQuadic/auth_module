@@ -33,7 +33,7 @@ class _AuthNetworkService {
     try {
       return await _module._networkClient.delete(
         endpoint,
-        body: body,
+        query: body,
         token: token,
       );
     } catch (e) {
@@ -47,7 +47,7 @@ class _AuthNetworkService {
     String? token,
   }) async {
     try {
-      return await _module._networkClient.get(endpoint, body: body, token: token);
+      return await _module._networkClient.get(endpoint, query: body, token: token);
     } catch (e) {
       return e.toString();
     }

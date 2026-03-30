@@ -62,7 +62,7 @@ class _AuthUserService {
 
   Future<AuthResult<UserModel>> fetchCurrentUser() async {
     final currentToken = await _module._getToken();
-    final value = await _module._safeGet(
+    final value = await _module._safePost(
       _module.config.userEndpoint,
       token: currentToken,
     );
