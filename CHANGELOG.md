@@ -1,3 +1,10 @@
+## 0.0.8
+
+* Added password management APIs:
+	* `forgotPassword()` to initiate password recovery flow.
+	* `resetPassword()` to complete password reset with automatic stored token detection.
+	* `changePassword()` to change password for authenticated users.
+
 ## 0.0.7
 
 * Added Firebase auth integration APIs:
