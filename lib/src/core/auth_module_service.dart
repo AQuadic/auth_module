@@ -1,6 +1,9 @@
+import 'dart:async';
+
 import 'package:auth_module/src/core/auth_module_enum.dart';
 import 'package:dio/dio.dart';
 import 'package:cross_file/cross_file.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 export 'auth_module_enum.dart';
 
@@ -71,6 +74,7 @@ class AuthModule {
 
   String? _token;
   String? _tempToken;
+  String? _firebaseVerificationId;
   UserModel? _user;
   OtpResponse? _otpResponse;
   bool? _isNotificationEnabled;
@@ -79,6 +83,7 @@ class AuthModule {
   UserModel? get user => _user;
   String? get token => _token;
   String? get tempToken => _tempToken;
+  String? get firebaseVerificationId => _firebaseVerificationId;
   OtpResponse? get otpResponse => _otpResponse;
   bool get isLoggedIn => (_token?.isNotEmpty ?? false) && _user != null;
   bool? get isNotificationEnabled => _isNotificationEnabled;
@@ -141,20 +146,56 @@ class AuthModule {
     );
   }
 
-  // Future<AuthResult<UserModel>> loginWithSocial({
-  //   required SocialProvider provider,
-  //   required String accessToken,
-  //   String? idToken,
-  // }) {
-  //   return _authService.loginWithSocial(
-  //     provider: provider,
-  //     accessToken: accessToken,
-  //     idToken: idToken,
-  //   );
-  // }
-
-  Future<AuthResult<UserModel>> loginWithSocial({required SocialProvider provider}) {
+  Future<AuthResult<UserModel>> loginWithSocial({
+    required SocialProvider provider,
+  }) {
     return _authService.loginWithSocial(provider: provider);
+  }
+
+  Future<AuthResult<UserModel>> loginWithFirebaseIdToken({
+    required String idToken,
+    String provider = 'FIREBASE',
+  }) {
+    return _authService.loginWithFirebaseIdToken(
+      idToken: idToken,
+      provider: provider,
+    );
+  }
+
+  Future<AuthResult<UserModel>> loginWithFirebasePhoneOtp({
+    required String verificationId,
+    required String smsCode,
+    String provider = 'FIREBASE',
+  }) {
+    return _authService.verifyFirebasePhoneOtp(
+      verificationId: verificationId,
+      smsCode: smsCode,
+      provider: provider,
+    );
+  }
+
+  Future<AuthResult<void>> sendFirebasePhoneOtp({
+    required String phoneNumber,
+    Duration timeout = const Duration(seconds: 60),
+    int? forceResendingToken,
+  }) {
+    return _authService.sendFirebasePhoneOtp(
+      phoneNumber: phoneNumber,
+      timeout: timeout,
+      forceResendingToken: forceResendingToken,
+    );
+  }
+
+  Future<AuthResult<UserModel>> verifyFirebasePhoneOtp({
+    required String smsCode,
+    String provider = 'FIREBASE',
+    String? verificationId,
+  }) {
+    return _authService.verifyFirebasePhoneOtp(
+      verificationId: verificationId,
+      smsCode: smsCode,
+      provider: provider,
+    );
   }
 
   Future<AuthResult<void>> requestPhoneOtpLogin({
@@ -269,8 +310,14 @@ class AuthModule {
     return _userService.deleteAccount();
   }
 
-  Future<AuthResult<void>> logout({bool callApi = true}) {
-    return _userService.logout(callApi: callApi);
+  Future<AuthResult<void>> logout({
+    bool callApi = true,
+    bool withFirebase = true,
+  }) {
+    return _userService.logout(
+      callApi: callApi,
+      withFirebase: withFirebase,
+    );
   }
 
   Future<dynamic> _safePost(
