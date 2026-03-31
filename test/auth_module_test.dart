@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:dio/dio.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:auth_module/auth_module.dart';
 
@@ -13,6 +14,7 @@ void main() {
   late _FakeSocialSignInClient socialSignInClient;
 
   setUp(() {
+    SharedPreferences.setMockInitialValues({});
     tokenStorage = _InMemoryTokenStorage();
     networkClient = _FakeNetworkClient();
     notificationModule = _FakeNotificationModule();
@@ -224,6 +226,121 @@ void main() {
     expect(await tokenStorage.getToken(), isNull);
     expect(notificationModule.token, isNull);
     expect(notificationModule.deleteTokenCalled, isTrue);
+  });
+
+  test('forgotPassword stores temp token and otp reference', () async {
+    networkClient.postResponse = {
+      'token': 'temp-forgot-token',
+      'otp_callback': {'reference': 'forgot-ref-1', 'status': 'pending'},
+      'message': 'sent',
+    };
+
+    final result = await module.forgotPassword(
+      phoneCountry: 'EG',
+      phone: '01000000000',
+    );
+
+    expect(result.isSuccess, isTrue);
+    expect(module.tempToken, 'temp-forgot-token');
+    expect(module.otpResponse?.reference, 'forgot-ref-1');
+    expect(networkClient.lastPostEndpoint, module.config.forgetPasswordEndpoint);
+    expect(networkClient.lastPostBody?['phone_country'], 'EG');
+    expect(networkClient.lastPostBody?['phone'], '01000000000');
+    expect(networkClient.lastPostBody?['reset_type'], 'whatsapp_send');
+  });
+
+  test('resetPassword sends explicit reset token payload', () async {
+    networkClient.postResponse = {'message': 'reset done'};
+
+    final result = await module.resetPassword(
+      phone: '01000000000',
+      phoneCountry: 'EG',
+      password: 'NewPass123',
+      passwordConfirmation: 'NewPass123',
+      resetToken: 'explicit-reset-token',
+    );
+
+    expect(result.isSuccess, isTrue);
+    expect(networkClient.lastPostEndpoint, module.config.forgetPasswordEndpoint);
+    expect(networkClient.lastPostBody?['phone'], '01000000000');
+    expect(networkClient.lastPostBody?['phone_country'], 'EG');
+    expect(networkClient.lastPostBody?['reset_token'], 'explicit-reset-token');
+    expect(networkClient.lastPostBody?['password'], 'NewPass123');
+    expect(networkClient.lastPostBody?['password_confirmation'], 'NewPass123');
+    expect(networkClient.lastPostBody?['reset_type'], 'whatsapp_send');
+  });
+
+  test('resetPassword uses stored reset token from check-state flow', () async {
+    networkClient.postResponse = {
+      'token': 'temp-token',
+      'user': {'id': 12, 'phone': '01000000000'},
+      'otp_callback': {'reference': 'ref-12', 'status': 'pending'},
+      'message': 'sent',
+    };
+
+    final requestOtpResult = await module.requestPhoneOtpLogin(
+      phoneCountry: 'EG',
+      phone: '01000000000',
+    );
+    expect(requestOtpResult.isSuccess, isTrue);
+
+    networkClient.postResponse = {
+      'token': 'user-token',
+      'user': {'id': 12, 'name': 'Flow User'},
+      'reset_token': 'stored-reset-token',
+      'message': 'verified',
+    };
+
+    final checkResult = await module.checkPhoneOtpState(
+      phone: '01000000000',
+      phoneCountry: 'EG',
+    );
+    expect(checkResult.isSuccess, isTrue);
+
+    networkClient.postResponse = {'message': 'reset done'};
+
+    final resetResult = await module.resetPassword(
+      phone: '01000000000',
+      phoneCountry: 'EG',
+      password: 'NewPass123',
+      passwordConfirmation: 'NewPass123',
+    );
+
+    expect(resetResult.isSuccess, isTrue);
+    expect(networkClient.lastPostEndpoint, module.config.forgetPasswordEndpoint);
+    expect(networkClient.lastPostBody?['reset_token'], 'stored-reset-token');
+  });
+
+  test('changePassword sends expected payload', () async {
+    await tokenStorage.saveToken('auth-token');
+    await module.init();
+    networkClient.postResponse = {'message': 'changed'};
+
+    final result = await module.changePassword(
+      oldPassword: 'OldPass123',
+      newPassword: 'NewPass123',
+      confirmPassword: 'NewPass123',
+    );
+
+    expect(result.isSuccess, isTrue);
+    expect(
+      networkClient.lastPostEndpoint,
+      module.config.changeCurrentPasswordEndpoint,
+    );
+    expect(networkClient.lastPostBody?['current_password'], 'OldPass123');
+    expect(networkClient.lastPostBody?['password'], 'NewPass123');
+    expect(networkClient.lastPostBody?['password_confirmation'], 'NewPass123');
+  });
+
+  test('changePassword fails when user is not authenticated', () async {
+    final result = await module.changePassword(
+      oldPassword: 'OldPass123',
+      newPassword: 'NewPass123',
+      confirmPassword: 'NewPass123',
+    );
+
+    expect(result.isSuccess, isFalse);
+    expect(result.error, 'Not authenticated.');
   });
 
 }

@@ -101,7 +101,7 @@ await auth.verifyOtp(
 );
 ```
 
-Check account state (Souq style polling/callback reference):
+Check account state (Polling/callback reference):
 
 ```dart
 await auth.checkPhoneOtpState(
@@ -118,6 +118,56 @@ await auth.resendOtp(
 	phone: '5xxxxxxxx',
 	phoneCountry: 'SA',
 	isNew: true,
+);
+```
+
+### Forgot & Reset password
+
+The module supports the 3-step forgot/reset cycle:
+
+1) Start forgot password:
+
+```dart
+final forgot = await auth.forgotPassword(
+	phoneCountry: 'EG',
+	phone: '01000000000',
+	// resetType defaults to 'whatsapp_send'
+);
+```
+
+On success, the module stores temp token and OTP callback reference internally.
+
+2) Poll verification state:
+
+```dart
+final check = await auth.checkPhoneOtpState(
+	phone: '01000000000',
+	phoneCountry: 'EG',
+	// reference is optional; module uses cached otpResponse.reference
+);
+```
+
+When verified, backend reset token is persisted internally.
+
+3) Submit new password:
+
+```dart
+final reset = await auth.resetPassword(
+	phone: '01000000000',
+	phoneCountry: 'EG',
+	password: 'NewPass123',
+	passwordConfirmation: 'NewPass123',
+	// resetToken optional; defaults to locally stored reset token
+);
+```
+
+### Change current password
+
+```dart
+final change = await auth.changePassword(
+	oldPassword: 'OldPass123',
+	newPassword: 'NewPass123',
+	confirmPassword: 'NewPass123',
 );
 ```
 

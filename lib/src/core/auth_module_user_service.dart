@@ -5,6 +5,144 @@ class _AuthUserService {
 
   final AuthModule _module;
 
+  Future<AuthResult<void>> forgotPassword({
+    required String phoneCountry,
+    required String phone,
+    String resetType = 'whatsapp_send',
+  }) async {
+    if (!_module._isNotBlank(phoneCountry) || !_module._isNotBlank(phone)) {
+      return AuthResult.failure('phoneCountry and phone are required.');
+    }
+
+    final value = await _module._safePost(
+      _module.config.forgetPasswordEndpoint,
+      body: {
+        'phone_country': phoneCountry,
+        'phone': phone,
+        'reset_type': resetType,
+      },
+    );
+
+    if (value is! Response) {
+      return AuthResult.failure(_module._resolveErrorMessage(value));
+    }
+
+    final data = value.data;
+    if (data is! Map<String, dynamic>) {
+      return AuthResult.failure('Invalid response data.');
+    }
+
+    final token = data[_module.config.authTokenResponseKey]?.toString();
+    if (_module._isNotBlank(token)) {
+      _module._tempToken = token;
+    }
+
+    final otpCallback = data[_module.config.otpCallbackResponseKey];
+    if (otpCallback is Map<String, dynamic>) {
+      _module._otpResponse = OtpResponse.fromJson(otpCallback);
+    }
+
+    return AuthResult.success(
+      message: data[_module.config.messageResponseKey]?.toString(),
+    );
+  }
+
+  Future<AuthResult<void>> resetPassword({
+    required String phone,
+    required String phoneCountry,
+    required String password,
+    required String passwordConfirmation,
+    String? resetToken,
+    String resetType = 'whatsapp_send',
+  }) async {
+    if (!_module._isNotBlank(phone) || !_module._isNotBlank(phoneCountry)) {
+      return AuthResult.failure('phone and phoneCountry are required.');
+    }
+    if (!_module._isNotBlank(password) ||
+        !_module._isNotBlank(passwordConfirmation)) {
+      return AuthResult.failure(
+        'password and passwordConfirmation are required.',
+      );
+    }
+
+    final storedResetToken = await UserModel.getResetPassToken;
+    final effectiveResetToken =
+        _module._isNotBlank(resetToken) ? resetToken : storedResetToken;
+
+    if (!_module._isNotBlank(effectiveResetToken)) {
+      return AuthResult.failure(
+        'resetToken is missing. Complete forgot/check-state flow first.',
+      );
+    }
+
+    final value = await _module._safePost(
+      _module.config.forgetPasswordEndpoint,
+      body: {
+        'phone': phone,
+        'phone_country': phoneCountry,
+        'reset_token': effectiveResetToken,
+        'password': password,
+        'password_confirmation': passwordConfirmation,
+        'reset_type': resetType,
+      },
+    );
+
+    if (value is! Response) {
+      return AuthResult.failure(_module._resolveErrorMessage(value));
+    }
+
+    final data = value.data;
+    if (data is! Map<String, dynamic>) {
+      return AuthResult.failure('Invalid response data.');
+    }
+
+    return AuthResult.success(
+      message: data[_module.config.messageResponseKey]?.toString(),
+    );
+  }
+
+  Future<AuthResult<void>> changePassword({
+    required String oldPassword,
+    required String newPassword,
+    required String confirmPassword,
+  }) async {
+    if (!_module._isNotBlank(oldPassword) ||
+        !_module._isNotBlank(newPassword) ||
+        !_module._isNotBlank(confirmPassword)) {
+      return AuthResult.failure(
+        'oldPassword, newPassword and confirmPassword are required.',
+      );
+    }
+
+    final currentToken = await _module._getToken();
+    if (!_module._isNotBlank(currentToken)) {
+      return AuthResult.failure('Not authenticated.');
+    }
+
+    final value = await _module._safePost(
+      _module.config.changeCurrentPasswordEndpoint,
+      token: currentToken,
+      body: {
+        'current_password': oldPassword,
+        'password': newPassword,
+        'password_confirmation': confirmPassword,
+      },
+    );
+
+    if (value is! Response) {
+      return AuthResult.failure(_module._resolveErrorMessage(value));
+    }
+
+    final data = value.data;
+    if (data is! Map<String, dynamic>) {
+      return AuthResult.failure('Invalid response data.');
+    }
+
+    return AuthResult.success(
+      message: data[_module.config.messageResponseKey]?.toString(),
+    );
+  }
+
   Future<AuthResult<UserModel>> updateUser({
     XFile? image,
     String? email,

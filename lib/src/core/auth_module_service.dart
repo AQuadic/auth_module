@@ -256,6 +256,48 @@ class AuthModule {
     );
   }
 
+  Future<AuthResult<void>> forgotPassword({
+    required String phoneCountry,
+    required String phone,
+    String resetType = 'whatsapp_send',
+  }) {
+    return _userService.forgotPassword(
+      phoneCountry: phoneCountry,
+      phone: phone,
+      resetType: resetType,
+    );
+  }
+
+  Future<AuthResult<void>> resetPassword({
+    required String phone,
+    required String phoneCountry,
+    required String password,
+    required String passwordConfirmation,
+    String? resetToken,
+    String resetType = 'whatsapp_send',
+  }) {
+    return _userService.resetPassword(
+      phone: phone,
+      phoneCountry: phoneCountry,
+      password: password,
+      passwordConfirmation: passwordConfirmation,
+      resetToken: resetToken,
+      resetType: resetType,
+    );
+  }
+
+  Future<AuthResult<void>> changePassword({
+    required String oldPassword,
+    required String newPassword,
+    required String confirmPassword,
+  }) {
+    return _userService.changePassword(
+      oldPassword: oldPassword,
+      newPassword: newPassword,
+      confirmPassword: confirmPassword,
+    );
+  }
+
   Future<AuthResult<UserModel>> signUp({
     required String name,
     required String email,
