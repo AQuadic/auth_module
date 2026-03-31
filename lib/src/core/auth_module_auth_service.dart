@@ -64,6 +64,33 @@ class _AuthAuthService {
     return result;
   }
 
+  Future<AuthResult<UserModel>> _sendFirebaseTokenToServer({
+    required String accessToken,
+    String provider = 'FIREBASE',
+    String? idToken,
+  }) async {
+    if (!_module._isNotBlank(accessToken)) {
+      return AuthResult.failure('Access token is required.');
+    }
+
+    final body = <String, dynamic>{
+      'provider': provider,
+      'access_token': accessToken,
+      if (_module._isNotBlank(idToken)) 'id_token': idToken,
+    };
+
+    final value = await _module._safePost(
+      _module.config.firebaseLoginEndpoint,
+      body: body,
+    );
+
+    final result = await _handleAuthResponse(value);
+    if (result.isSuccess) {
+      await _module.addDevice();
+    }
+    return result;
+  }
+
   Future<AuthResult<UserModel>> loginWithSocial({
     required SocialProvider provider,
   }) async {  
@@ -84,6 +111,129 @@ class _AuthAuthService {
       accessToken: credentials.accessToken,
       idToken: credentials.idToken,
     );
+  }
+
+  Future<AuthResult<UserModel>> loginWithFirebaseIdToken({
+    required String idToken,
+    String provider = 'FIREBASE',
+  }) async {
+    if (!_module._isNotBlank(idToken)) {
+      return AuthResult.failure('Firebase ID token is required.');
+    }
+
+    return _sendFirebaseTokenToServer(
+      accessToken: idToken,
+      idToken: idToken,
+      provider: provider,
+    );
+  }
+
+  Future<AuthResult<UserModel>> loginWithFirebasePhoneOtp({
+    required String verificationId,
+    required String smsCode,
+    String provider = 'FIREBASE',
+  }) async {
+    return verifyFirebasePhoneOtp(
+      verificationId: verificationId,
+      smsCode: smsCode,
+      provider: provider,
+    );
+  }
+
+  Future<AuthResult<void>> sendFirebasePhoneOtp({
+    required String phoneNumber,
+    Duration timeout = const Duration(seconds: 60),
+    int? forceResendingToken,
+  }) async {
+    if (!_module._isNotBlank(phoneNumber)) {
+      return AuthResult.failure('phoneNumber is required.');
+    }
+
+    final completer = Completer<AuthResult<void>>();
+
+    await FirebaseAuth.instance.verifyPhoneNumber(
+      phoneNumber: phoneNumber,
+      timeout: timeout,
+      forceResendingToken: forceResendingToken,
+      verificationCompleted: (PhoneAuthCredential credential) async {
+        if (!completer.isCompleted) {
+          completer.complete(
+            AuthResult.success(
+              message:
+                  'Phone auto-verification completed. You can continue login flow.',
+            ),
+          );
+        }
+      },
+      verificationFailed: (FirebaseAuthException e) {
+        if (!completer.isCompleted) {
+          completer.complete(
+            AuthResult.failure(
+              e.message ?? 'Firebase phone verification failed: ${e.code}',
+            ),
+          );
+        }
+      },
+      codeSent: (String verificationId, int? _) {
+        _module._firebaseVerificationId = verificationId;
+        if (!completer.isCompleted) {
+          completer.complete(
+            AuthResult.success(message: 'OTP has been sent successfully.'),
+          );
+        }
+      },
+      codeAutoRetrievalTimeout: (String verificationId) {
+        _module._firebaseVerificationId = verificationId;
+      },
+    );
+
+    return completer.future;
+  }
+
+  Future<AuthResult<UserModel>> verifyFirebasePhoneOtp({
+    required String smsCode,
+    String provider = 'FIREBASE',
+    String? verificationId,
+  }) async {
+    final activeVerificationId = verificationId ?? _module._firebaseVerificationId;
+    if (!_module._isNotBlank(activeVerificationId)) {
+      return AuthResult.failure(
+        'verificationId is missing. Call sendFirebasePhoneOtp first.',
+      );
+    }
+    if (!_module._isNotBlank(smsCode)) {
+      return AuthResult.failure('smsCode is required.');
+    }
+    final safeVerificationId = activeVerificationId!;
+
+    try {
+      final credential = PhoneAuthProvider.credential(
+        verificationId: safeVerificationId,
+        smsCode: smsCode,
+      );
+
+      final userCredential = await FirebaseAuth.instance.signInWithCredential(
+        credential,
+      );
+      final idToken = await userCredential.user?.getIdToken();
+      if (!_module._isNotBlank(idToken)) {
+        return AuthResult.failure(
+          'Firebase ID token is missing after phone sign-in.',
+        );
+      }
+      final safeIdToken = idToken!;
+
+      return _sendFirebaseTokenToServer(
+        accessToken: safeIdToken,
+        provider: provider,
+      );
+    } on FirebaseAuthException catch (e) {
+      return AuthResult.failure(
+        e.message ?? 'Firebase phone authentication failed: ${e.code}',
+      );
+    } catch (e) {
+      return AuthResult.failure('Firebase phone authentication failed: $e');
+    }
   }
 
   Future<AuthResult<UserModel>> verifyOtp({
@@ -186,6 +336,11 @@ class _AuthAuthService {
     _module._user = UserModel.fromJson(userJson);
     _module._token = token;
     _module._tempToken = token;
+
+    final resetToken = data['reset_token']?.toString();
+    if (_module._isNotBlank(resetToken)) {
+      await UserModel.saveResetPassToken(resetToken!);
+    }
 
     await _module._tokenStorage.saveToken(token);
     try {
