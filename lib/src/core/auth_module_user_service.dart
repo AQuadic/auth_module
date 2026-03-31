@@ -135,14 +135,24 @@ class _AuthUserService {
     return AuthResult.success(message: message);
   }
 
-  Future<AuthResult<void>> logout({bool callApi = true}) async {
+  Future<AuthResult<void>> logout({
+    bool callApi = true,
+    bool withFirebase = true,
+  }) async {
     final currentToken = await _module._getToken();
     if (callApi && currentToken != null && currentToken.isNotEmpty) {
       await _module._safePost(_module.config.logoutEndpoint, token: currentToken);
     }
 
+    if (withFirebase) {
+      try {
+        await FirebaseAuth.instance.signOut();
+      } catch (_) {}
+    }
+
     _module._token = null;
     _module._tempToken = null;
+    _module._firebaseVerificationId = null;
     _module._user = null;
     _module._otpResponse = null;
 
