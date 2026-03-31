@@ -7,6 +7,7 @@ Supports:
 - Phone + country + password login
 - Phone + country login without password (OTP flow with CloudWA/check-state pattern)
 - Social login token exchange (Google/Apple)
+- Firebase Auth token exchange (including phone OTP credential flow)
 - Sign up
 - Profile update
 - Delete account
@@ -138,7 +139,34 @@ final result = await auth.loginWithSocial(
 );
 ```
 
-You still configure provider SDK options in `AuthModuleConfig` (for example `googleClientId`, `googleAuthScopes`, `appleClientId`, `appleRedirectUri`).
+### 5) Firebase auth login
+
+
+```dart
+final sendResult = await auth.sendFirebasePhoneOtp(
+	phoneNumber: '+201234567890', // E.164 format
+);
+
+if (!sendResult.isSuccess) {
+	// show sendResult.message
+	return;
+}
+
+final verifyResult = await auth.verifyFirebasePhoneOtp(
+	smsCode: smsCodeFromUser,
+);
+
+if (verifyResult.isSuccess) {
+	final UserModel? user = verifyResult.data;
+	// auth.user is assigned internally as well
+}
+```
+
+`verifyFirebasePhoneOtp` uses the internally stored Firebase `verificationId` from `sendFirebasePhoneOtp`.
+You can still pass a custom `verificationId` when needed.
+
+Both methods send the token to `users/auth/firebase` by default (`AuthModuleConfig.firebaseLoginEndpoint`) and include provider as `'FIREBASE'` by default.
+
 
 ### Sign up
 
@@ -203,7 +231,16 @@ if (result.isSuccess) {
 
 ```dart
 await auth.logout();
+
+// Optional: skip Firebase sign-out
+await auth.logout(withFirebase: false);
 ```
+
+`logout()` now performs all of the following in one call:
+- Calls backend logout endpoint (when token exists and `callApi` is true).
+- Signs out Firebase session via `FirebaseAuth.instance.signOut()` when `withFirebase` is true.
+- Clears local auth state (`token`, `tempToken`, `user`, `otpResponse`, Firebase verification id).
+- Clears persisted token and notification tokens.
 
 ### Delete account
 
@@ -222,9 +259,6 @@ if (result.isSuccess) {
 - social provider (`socialLoginProvider`: `google` or `apple`)
 - Google setup (`googleClientId`, `googleAuthScopes`)
 - Apple setup (`appleClientId`, `appleRedirectUri`)
-- response keys (`token`, `user`, `message`, `otp_callback`, `reference`)
-- default verify types (`whatsapp`, `mail_otp`, `new`)
-- persisted token key
 
 ### AuthModuleConfig example
 
