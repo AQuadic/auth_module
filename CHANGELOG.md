@@ -1,3 +1,11 @@
+## 0.0.7
+
+* Added Firebase auth integration APIs:
+	* `sendFirebasePhoneOtp()` to send Firebase phone OTP from the module.
+	* `verifyFirebasePhoneOtp()` to verify OTP using stored/provided Firebase `verificationId` and return `UserModel`.
+	* `loginWithFirebaseIdToken()` and `loginWithFirebasePhoneOtp()` for Firebase token exchange with backend.
+* Updated logout to support optional Firebase sign-out with `logout(withFirebase: true/false)`.
+
 ## 0.0.6
 
 * Added package executable `dart run auth_module:add_apple_signin_configs` to configure Apple Sign-In for both Android and iOS in one command.
