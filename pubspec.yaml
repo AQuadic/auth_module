@@ -20,6 +20,7 @@ dependencies:
       url: https://github.com/AQuadic/aq_flutter_tools.git
   google_sign_in : ^7.2.0
   sign_in_with_apple : ^7.0.1
+  firebase_auth : ^6.3.0
 
 dev_dependencies:
   flutter_test:
