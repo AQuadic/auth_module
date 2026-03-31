@@ -48,12 +48,14 @@ class AuthModuleConfig {
   static const String _messageResponseKey = 'message';
   static const String _otpCallbackResponseKey = 'otp_callback';
   static const String _otpReferenceKey = 'reference';
+    static const String _defaultFirebaseAuthEndpoint = 'users/auth/firebase';
 
   String get userEndpoint => isAdmin ? _adminUserEndPoint : _userUserEndPoint;
   String get loginEndpoint =>
       isAdmin ? _adminLoginEndPoint : _userLoginEndPoint;
   String get socialLoginEndpoint =>
       isAdmin ? _adminSocialLoginEndPoint : _userSocialLoginEndPoint;
+  String get firebaseLoginEndpoint => _defaultFirebaseAuthEndpoint;
   String get signupEndpoint =>
       isAdmin ? _adminSignupEndPoint : _userSignupEndPoint;
   String get logoutEndpoint =>
