@@ -1,3 +1,16 @@
+## 0.0.9
+
+* Added built-in authentication UI flow components:
+	* `LoginScreen` for email/password and phone/password login.
+	* `OtpScreen` for OTP code entry and verification.
+	* `WaitingResponseScreen` for phone verification polling flow.
+* Added `AuthUiCubit` and `AuthUiState` for internal auth UI state management.
+* Added `ModuleLocalizations` support for Arabic/English UI texts via `langCode`.
+* Added reusable auth UI widgets (`ModuleButton`, `PasswordTextField`, `PhoneField`, `TextFieldWidget`) and `AuthModuleUiProvider`.
+* Exported presentation layer APIs from `auth_module.dart` for direct package consumption.
+* Updated package dependencies/assets to support the new UI components.
+
+
 ## 0.0.8
 
 * Added password management APIs:

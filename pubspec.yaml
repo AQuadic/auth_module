@@ -1,6 +1,6 @@
 name: auth_module
 description: "Logic-only authentication module for Flutter projects."
-version: 0.0.8
+version: 0.0.9
 homepage:
 
 environment:
