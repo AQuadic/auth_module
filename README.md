@@ -401,6 +401,174 @@ Run auth module tests only:
 flutter test test/auth_module_test.dart
 ```
 
+## UI Components
+
+The module includes ready-to-use Flutter widgets for login, OTP, and phone verification flows. The cubit and state management are handled automatically—no need to wrap the app.
+
+### Navigation Flow (Splash/Onboarding → Login → Main App)
+
+From your screen, navigate directly to `LoginScreen` with `loginType` parameter, passing `mainAppScreen` (where to go after successful login):
+
+```dart
+import 'package:auth_module/auth_module.dart';
+
+    Navigator.of(context).pushAndRemoveUntil(
+      MaterialPageRoute(
+        builder: (_) => LoginScreen(
+          loginType: LoginType.emailAndPassword,
+		  langCode: 'en',
+          mainAppScreen: LayoutScreen(), // Destination after login
+          primaryColor: Theme.of(context).colorScheme.primary,
+          socialProviders: const [
+            SocialProvider.google,
+            SocialProvider.apple,
+          ],
+        ),
+      ),
+      (route) => false,
+    );
+```
+
+The login screen automatically builds the right form (email or phone) based on `loginType`. Cubit and state management are handled internally.
+
+### Login Screen (Email + Password)
+
+```dart
+LoginScreen(
+  loginType: LoginType.emailAndPassword,
+	langCode: 'en',
+  mainAppScreen: HomeScreen(),
+  primaryColor: Colors.blue,
+  logo: Image.asset('assets/logo.png'),
+  title: 'Welcome',
+  subtitle: 'Sign in to your account',
+  socialProviders: [
+    SocialProvider.google,
+    SocialProvider.apple,
+  ],
+);
+```
+
+### Login Screen (Phone + Password)
+
+```dart
+LoginScreen(
+  loginType: LoginType.phoneAndPassword,
+	langCode: 'en',
+  mainAppScreen: HomeScreen(),
+  primaryColor: Theme.of(context).colorScheme.primary,
+  title: 'Phone Login',
+  socialProviders: const [
+    SocialProvider.google,
+    SocialProvider.apple,
+  ],
+);
+```
+
+### Full Custom Login Screen
+
+For full control with all customization options:
+
+```dart
+LoginScreen(
+  loginType: LoginType.emailAndPassword,
+	langCode: 'ar', // or 'en'
+  mainAppScreen: HomeScreen(),
+  // Custom branding
+  logo: Image.asset('assets/logo.png'),
+  title: 'Sign In',
+  subtitle: 'Enter your credentials',
+  primaryColor: Colors.teal,
+  contentPadding: const EdgeInsets.all(24),
+  // Custom field labels/hints (for email)
+  emailLabel: 'Email Address',
+  emailHint: 'user@example.com',
+  // Custom field labels/hints (for phone)
+  phoneLabel: 'Phone Number',
+  passwordLabel: 'Password',
+  passwordHint: 'Enter secure password',
+  // Social login (pass list or null to hide)
+  socialProviders: [SocialProvider.google],
+);
+```
+
+### OTP Verification Screen
+
+After `auth.requestPhoneOtpLogin()`, navigate to `OtpScreen`:
+
+```dart
+// Step 1: Request OTP
+final result = await AuthModule.instance.requestPhoneOtpLogin(
+  phoneCountry: 'EG',
+  phone: '1001234567',
+);
+
+if (result.isSuccess) {
+  // Step 2: Navigate to OtpScreen
+  Navigator.push(
+    context,
+    MaterialPageRoute(
+      builder: (_) => OtpScreen(
+				langCode: 'en',
+        mainAppScreen: HomeScreen(),
+        phone: '1001234567',
+        phoneCountry: 'EG',
+        primaryColor: Colors.blue,
+      ),
+    ),
+  );
+}
+```
+
+The screen shows a 6-digit input field, resend countdown, and navigates automatically when verified.
+
+### Waiting Response Screen
+
+For phone-only verification (SMS/WhatsApp polling):
+
+```dart
+// Step 1: Start phone OTP login
+final result = await AuthModule.instance.requestPhoneOtpLogin(
+  phoneCountry: 'SA',
+  phone: '501234567',
+);
+
+if (result.isSuccess) {
+  // Step 2: Navigate to waiting screen
+  Navigator.push(
+    context,
+    MaterialPageRoute(
+      builder: (_) => WaitingResponseScreen(
+        phone: '501234567',
+        country: 'SA',
+				langCode: 'en',
+        mainAppScreen: HomeScreen(),
+        primaryColor: Theme.of(context).colorScheme.primary,
+      ),
+    ),
+  );
+}
+```
+
+The screen automatically:
+- Polls `checkPhoneOtpState()` every 2 seconds
+- Navigates to `mainAppScreen` when verified
+- Allows resend of OTP with countdown
+
+### Localization
+
+All screens support English and Arabic via `langCode` (String from your project locale):
+
+```dart
+LoginScreen(
+	loginType: LoginType.phoneAndPassword,
+	langCode: context.locale.languageCode, // example: 'en' or 'ar'
+	mainAppScreen: HomeScreen(),
+	// ...
+);
+```
+
+
 ## Notes
 
 - Module is logic only (no UI/widgets).
