@@ -1,5 +1,18 @@
 library;
 
+export 'src/presentation/auth_module_ui_provider.dart';
+export 'src/presentation/cubit/auth_ui_cubit.dart';
+export 'src/presentation/cubit/auth_ui_state.dart';
+export 'src/presentation/localization/module_localizations.dart';
+export 'src/presentation/screens/login_screen.dart';
+export 'src/presentation/screens/login_type.dart';
+export 'src/presentation/screens/otp_screen.dart';
+export 'src/presentation/screens/waiting_response_screen.dart';
+export 'src/presentation/widgets/module_button.dart';
+export 'src/presentation/widgets/password_text_field.dart';
+export 'src/presentation/widgets/phone_field.dart';
+export 'src/presentation/widgets/text_field_widget.dart';
+
 export 'src/core/auth_module_config.dart';
 export 'src/core/auth_module_enum.dart';
 export 'src/core/auth_module_service.dart';
