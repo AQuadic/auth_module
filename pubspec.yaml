@@ -21,6 +21,12 @@ dependencies:
   google_sign_in : ^7.2.0
   sign_in_with_apple : ^7.0.1
   firebase_auth : ^6.3.0
+  fl_country_code_picker: ^0.1.9+1
+  flutter_svg: ^2.2.3
+  pin_code_text_field: ^1.8.0
+
+
+
 
 dev_dependencies:
   flutter_test:
@@ -33,3 +39,6 @@ dev_dependencies:
 # The following section is specific to Flutter packages.
 flutter:
 
+  # To add assets to your package, add an assets section, like this:
+  assets:
+    - assets/images/
