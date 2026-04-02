@@ -489,6 +489,8 @@ LoginScreen(
   passwordHint: 'Enter secure password',
   // Social login (pass list or null to hide)
   socialProviders: [SocialProvider.google],
+  // Interceptor dialog control (for phone verification)
+  onInterceptorFlagChange: (flag){}), // Controls dialog behavior in waiting screen
 );
 ```
 
@@ -555,16 +557,33 @@ The screen automatically:
 - Navigates to `mainAppScreen` when verified
 - Allows resend of OTP with countdown
 
-### Localization
+### Wrapper Classes
 
-All screens support English and Arabic via `langCode` (String from your project locale):
+For convenience, you can use wrapper classes that set the `loginType` automatically:
 
 ```dart
-LoginScreen(
-	loginType: LoginType.phoneAndPassword,
-	langCode: context.locale.languageCode, // example: 'en' or 'ar'
-	mainAppScreen: HomeScreen(),
-	// ...
+// Email + Password
+LoginWithEmailAndPassword(
+  langCode: 'en',
+  mainAppScreen: HomeScreen(),
+  onInterceptorFlagChange: (flag){}), // Controls dialog behavior in waiting screen
+  // ... other parameters
+);
+
+// Phone + Password
+LoginWithPhoneAndPassword(
+  langCode: 'en',
+  mainAppScreen: HomeScreen(),
+  onInterceptorFlagChange: (flag){}), // Controls dialog behavior in waiting screen
+  // ... other parameters
+);
+
+// Phone + Verification Code
+LoginWithPhoneAndVerificationCode(
+  langCode: 'en',
+  mainAppScreen: HomeScreen(),
+  onInterceptorFlagChange: (flag){}), // Controls dialog behavior in waiting screen
+  // ... other parameters
 );
 ```
 
