@@ -39,7 +39,7 @@ class AuthModuleConfig {
   static const String _adminVerifyInfo = 'admin/verifyInfo';
   static const String _adminCheckStateOfAccountEndPoint = 'admin/otp/check';
   static const String _adminDeleteAccountEndPoint = 'admin/destroy';
-  static const String _defaultPhoneOtpVerifyType = 'whatsapp';
+  static const String _defaultPhoneOtpVerifyType = 'whatsapp_send';
   static const String _defaultResendEmailVerifyType = 'mail_otp';
   static const String _defaultVerifyType = 'new';
   static const String _persistTokenStorageKey = 'token';
