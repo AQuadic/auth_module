@@ -1,1 +1,1 @@
-enum LoginType { emailAndPassword, phoneAndPassword }
+enum LoginType { emailAndPassword, phoneAndPassword,phoneWithVerificationCode }

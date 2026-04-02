@@ -9,6 +9,7 @@ class ModulePasswordTextField extends StatefulWidget {
   final String hintText;
   final String title;
   final FormFieldValidator? validatorTextField;
+  final Color? color;
 
   const ModulePasswordTextField({
     super.key,
@@ -17,6 +18,7 @@ class ModulePasswordTextField extends StatefulWidget {
     required this.hintText,
     this.title = "password",
     this.validatorTextField,
+    this.color,
   });
 
   @override
@@ -54,9 +56,9 @@ class _ModulePasswordTextFieldState extends State<ModulePasswordTextField> {
           padding: const EdgeInsets.symmetric(horizontal: 10),
           child: Icon(
             showPassword ? CupertinoIcons.eye : CupertinoIcons.eye_slash,
-            size: 22,
+            size: 24,
             color: showPassword
-                ? Theme.of(context).colorScheme.primary
+                ? widget.color ?? Colors.blue
                 : Colors.grey.shade600,
           ),
         ),

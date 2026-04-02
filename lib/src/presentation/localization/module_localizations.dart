@@ -1,3 +1,4 @@
+
 class ModuleLocalizations {
   const ModuleLocalizations._();
 
@@ -48,6 +49,9 @@ class ModuleLocalizations {
       'invalid_otp': 'Please enter a valid OTP code',
       'unknown_error': 'Something went wrong, please try again.',
       'verification_message': 'Verification message',
+      "country_hint": "'Country' or 'Code' or 'Dial code'",
+      "select_country_or_region": "Select country or region",
+      "powered_by": "Powered by",
     },
     'ar': {
       'sign_in': 'تسجيل الدخول',
@@ -81,6 +85,9 @@ class ModuleLocalizations {
       'invalid_otp': 'يرجى ادخال كود تحقق صالح',
       'unknown_error': 'حدث خطأ، حاول مرة اخرى.',
       'verification_message': 'رسالة التحقق',
+      "country_hint": "'الدولة' أو 'الرمز' أو 'رمز الاتصال'",
+      "select_country_or_region": "اختر الدولة او المنطقة",
+      "powered_by": "مدعوم من",
     },
   };
 }

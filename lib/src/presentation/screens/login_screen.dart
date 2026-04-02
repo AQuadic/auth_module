@@ -1,13 +1,4 @@
-import 'package:auth_module/src/presentation/cubit/auth_ui_cubit.dart';
-import 'package:auth_module/src/presentation/cubit/auth_ui_state.dart';
-import 'package:auth_module/src/presentation/localization/module_localizations.dart';
-import 'package:auth_module/src/presentation/screens/login_type.dart';
-import 'package:auth_module/src/presentation/widgets/module_button.dart';
-import 'package:auth_module/src/presentation/widgets/password_text_field.dart';
-import 'package:auth_module/src/presentation/widgets/phone_field.dart';
-import 'package:auth_module/src/presentation/widgets/text_field_widget.dart';
-import 'package:auth_module/src/core/auth_module_enum.dart';
-import 'package:auth_module/src/core/auth_module_service.dart';
+import 'package:auth_module/auth_module.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -31,6 +22,8 @@ class LoginScreen extends StatefulWidget {
     this.passwordHint,
     this.contentPadding = const EdgeInsets.all(20),
     this.module,
+    this.onInterceptorDialogFlagChange,
+    this.cloudwaLogo,
   });
 
   final LoginType loginType;
@@ -49,6 +42,8 @@ class LoginScreen extends StatefulWidget {
   final String? passwordHint;
   final EdgeInsetsGeometry contentPadding;
   final AuthModule? module;
+  final ValueChanged<bool>? onInterceptorDialogFlagChange;
+  final Widget? cloudwaLogo;
 
   @override
   State<LoginScreen> createState() => _LoginScreenState();
@@ -59,8 +54,6 @@ class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _phoneController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
-
-  String tr(String key) => ModuleLocalizations.tr(widget.langCode, key);
 
   @override
   void dispose() {
@@ -76,28 +69,53 @@ class _LoginScreenState extends State<LoginScreen> {
       return;
     }
 
-    bool success = false;
     if (widget.loginType == LoginType.emailAndPassword) {
-      success = await cubit.loginWithEmail(
+      await cubit.loginWithEmail(
         email: _emailController.text.trim(),
         password: _passwordController.text,
       );
-    } else {
-      success = await cubit.loginWithPhoneAndPassword(
+    } else if (widget.loginType == LoginType.phoneAndPassword) {
+      await cubit.loginWithPhoneAndPassword(
         phone: _phoneController.text.trim(),
         password: _passwordController.text,
       );
+    } else if (widget.loginType == LoginType.phoneWithVerificationCode) {
+      final loginSuccess = await cubit.requestPhoneOtpLogin(
+        phone: _phoneController.text.trim(),
+        phoneCountry: cubit.state.phoneCountryCode,
+      );
+      if (loginSuccess && mounted) {
+        // Call resend to get the OTP response with scheme
+        final resendSuccess = await cubit.resendOtp(
+          phone: _phoneController.text.trim(),
+          phoneCountry: cubit.state.phoneCountryCode,
+          isNew: true,
+        );
+        if (resendSuccess && mounted) {
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (_) => BlocProvider.value(
+                value: cubit,
+                child: WaitingResponseScreen(
+                  phone: _phoneController.text.trim(),
+                  country: cubit.state.phoneCountryCode,
+                  langCode: widget.langCode,
+                  nextScreen: widget.mainAppScreen,
+                  primaryColor: widget.primaryColor,
+                  onInterceptorDialogFlagChange:
+                      widget.onInterceptorDialogFlagChange,
+                  cloudwaLogo: widget.cloudwaLogo,
+                ),
+              ),
+            ),
+          );
+        }
+      }
     }
-
-    if (!mounted || !success) {
-      return;
-    }
-
-    Navigator.of(context).pushAndRemoveUntil(
-      MaterialPageRoute(builder: (_) => widget.mainAppScreen),
-      (route) => false,
-    );
   }
+
+  String translate(String key, String langCode) =>
+      ModuleLocalizations.tr(langCode, key);
 
   @override
   Widget build(BuildContext context) {
@@ -107,10 +125,10 @@ class _LoginScreenState extends State<LoginScreen> {
       create: (context) => AuthUiCubit(module: widget.module),
       child: BlocConsumer<AuthUiCubit, AuthUiState>(
         listener: (context, state) {
-          final messenger = ScaffoldMessenger.of(context);
-          if (state.errorMessage != null && state.errorMessage!.isNotEmpty) {
-            messenger.showSnackBar(
-              SnackBar(content: Text(state.errorMessage!)),
+          if (state.user != null) {
+            Navigator.of(context).pushAndRemoveUntil(
+              MaterialPageRoute(builder: (_) => widget.mainAppScreen),
+              (route) => false,
             );
           }
         },
@@ -140,7 +158,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                       const SizedBox(height: 20),
                       Text(
-                        widget.title ?? tr('sign_in'),
+                        widget.title ?? translate('sign_in', widget.langCode),
                         textAlign: TextAlign.center,
                         style: const TextStyle(
                           fontSize: 26,
@@ -150,7 +168,8 @@ class _LoginScreenState extends State<LoginScreen> {
                       if ((widget.subtitle ?? '').isNotEmpty) ...[
                         const SizedBox(height: 8),
                         Text(
-                          widget.subtitle ?? tr('login_msg'),
+                          widget.subtitle ??
+                              translate('login_msg', widget.langCode),
                           textAlign: TextAlign.center,
                           style: TextStyle(
                             fontSize: 14,
@@ -164,60 +183,71 @@ class _LoginScreenState extends State<LoginScreen> {
                           onSaved: (_) {},
                           fromAuth: true,
                           controller: _emailController,
-                          title: widget.emailLabel ?? tr('email'),
+                          title:
+                              widget.emailLabel ??
+                              translate('email', widget.langCode),
                           hintText: widget.emailHint ?? 'name@email.com',
                           textInputType: TextInputType.emailAddress,
                           prefix: const Icon(CupertinoIcons.mail, size: 20),
                           validator: (value) {
                             final input = (value ?? '').trim();
                             if (input.isEmpty) {
-                              return tr('email_is_required');
+                              return translate(
+                                'email_is_required',
+                                widget.langCode,
+                              );
                             }
                             if (!RegExp(
                               r'^[^@]+@[^@]+\.[^@]+',
                             ).hasMatch(input)) {
-                              return tr('invalid_email');
+                              return translate(
+                                'invalid_email',
+                                widget.langCode,
+                              );
                             }
                             return null;
                           },
                         )
                       else
                         ModulePhoneField(
-                          title: widget.phoneLabel ?? tr('phone_number'),
+                          title:
+                              widget.phoneLabel ??
+                              translate('phone_number', widget.langCode),
                           hintText: widget.phoneHint,
                           controller: _phoneController,
+                          langCode: widget.langCode,
                           onCodeChanged: cubit.setPhoneCountryCode,
                           onChanged: (_) {},
                         ),
                       const SizedBox(height: 16),
-                      ModulePasswordTextField(
-                        title: widget.passwordLabel ?? tr('password'),
-                        hintText: widget.passwordHint ?? tr('password_hint'),
-                        controller: _passwordController,
-                        validatorTextField: (value) {
-                          final input = (value ?? '').trim();
-                          if (input.isEmpty) {
-                            return tr('password_is_required');
-                          }
-                          return null;
-                        },
-                      ),
+                      if (widget.loginType !=
+                          LoginType.phoneWithVerificationCode)
+                        ModulePasswordTextField(
+                          title:
+                              widget.passwordLabel ??
+                              translate('password', widget.langCode),
+                          hintText:
+                              widget.passwordHint ??
+                              translate('password_hint', widget.langCode),
+                          controller: _passwordController,
+                          color: color,
+                          validatorTextField: (value) {
+                            final input = (value ?? '').trim();
+                            if (input.isEmpty) {
+                              return translate(
+                                'password_is_required',
+                                widget.langCode,
+                              );
+                            }
+                            return null;
+                          },
+                        ),
                       const SizedBox(height: 22),
                       ModuleButton(
                         onTap: state.isLoading ? null : () => _submit(cubit),
-                        title: tr('sign_in'),
+                        title: translate('sign_in', widget.langCode),
                         color: color,
-                        radius: 12,
-                        suffex: state.isLoading
-                            ? const SizedBox(
-                                width: 18,
-                                height: 18,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  color: Colors.white,
-                                ),
-                              )
-                            : null,
+                        isLoading: state.isLoading,
                       ),
                       if (socialProviders != null &&
                           socialProviders.isNotEmpty) ...[
@@ -230,7 +260,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                 horizontal: 12,
                               ),
                               child: Text(
-                                tr('or'),
+                                translate('or', widget.langCode),
                                 style: TextStyle(color: Colors.grey.shade700),
                               ),
                             ),
@@ -281,6 +311,7 @@ class LoginWithEmailAndPassword extends StatelessWidget {
     this.primaryColor,
     this.socialProviders,
     this.module,
+    this.onInterceptorDialogFlagChange,
   });
 
   final String langCode;
@@ -291,6 +322,7 @@ class LoginWithEmailAndPassword extends StatelessWidget {
   final Color? primaryColor;
   final List<SocialProvider>? socialProviders;
   final AuthModule? module;
+  final ValueChanged<bool>? onInterceptorDialogFlagChange;
 
   @override
   Widget build(BuildContext context) {
@@ -304,6 +336,7 @@ class LoginWithEmailAndPassword extends StatelessWidget {
       primaryColor: primaryColor,
       socialProviders: socialProviders,
       module: module,
+      onInterceptorDialogFlagChange: onInterceptorDialogFlagChange,
     );
   }
 }
@@ -319,6 +352,7 @@ class LoginWithPhoneAndPassword extends StatelessWidget {
     this.primaryColor,
     this.socialProviders,
     this.module,
+    this.onInterceptorDialogFlagChange,
   });
 
   final String langCode;
@@ -329,6 +363,7 @@ class LoginWithPhoneAndPassword extends StatelessWidget {
   final Color? primaryColor;
   final List<SocialProvider>? socialProviders;
   final AuthModule? module;
+  final ValueChanged<bool>? onInterceptorDialogFlagChange;
 
   @override
   Widget build(BuildContext context) {
@@ -342,6 +377,48 @@ class LoginWithPhoneAndPassword extends StatelessWidget {
       primaryColor: primaryColor,
       socialProviders: socialProviders,
       module: module,
+      onInterceptorDialogFlagChange: onInterceptorDialogFlagChange,
+    );
+  }
+}
+
+class LoginWithPhoneAndVerificationCode extends StatelessWidget {
+  const LoginWithPhoneAndVerificationCode({
+    super.key,
+    required this.langCode,
+    required this.mainAppScreen,
+    this.logo,
+    this.title,
+    this.subtitle,
+    this.primaryColor,
+    this.socialProviders,
+    this.module,
+    this.onInterceptorDialogFlagChange,
+  });
+
+  final String langCode;
+  final Widget mainAppScreen;
+  final Widget? logo;
+  final String? title;
+  final String? subtitle;
+  final Color? primaryColor;
+  final List<SocialProvider>? socialProviders;
+  final AuthModule? module;
+  final ValueChanged<bool>? onInterceptorDialogFlagChange;
+
+  @override
+  Widget build(BuildContext context) {
+    return LoginScreen(
+      loginType: LoginType.phoneWithVerificationCode,
+      langCode: langCode,
+      mainAppScreen: mainAppScreen,
+      logo: logo,
+      title: title,
+      subtitle: subtitle,
+      primaryColor: primaryColor,
+      socialProviders: socialProviders,
+      module: module,
+      onInterceptorDialogFlagChange: onInterceptorDialogFlagChange,
     );
   }
 }
@@ -363,7 +440,7 @@ class _SocialIconButton extends StatelessWidget {
     return InkWell(
       onTap: onTap,
       customBorder: const CircleBorder(),
-      child: Image.asset(icon, package: 'auth_module',width: 42,height: 42,),
+      child: Image.asset(icon, package: 'auth_module', width: 42, height: 42),
     );
   }
 

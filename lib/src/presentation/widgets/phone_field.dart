@@ -1,3 +1,4 @@
+import 'package:auth_module/auth_module.dart';
 import 'package:fl_country_code_picker/fl_country_code_picker.dart';
 import 'package:flutter/material.dart';
 
@@ -12,9 +13,11 @@ class ModulePhoneField extends StatefulWidget {
   final TextEditingController? controller;
   final bool readOnly;
   final bool isRequired;
+  final String langCode;
 
   const ModulePhoneField({
     super.key,
+    required this.langCode,
     this.title,
     this.hintText,
     this.onChanged,
@@ -30,12 +33,35 @@ class ModulePhoneField extends StatefulWidget {
 }
 
 class _ModulePhoneFieldState extends State<ModulePhoneField> {
-  final FlCountryCodePicker _picker = const FlCountryCodePicker();
+  late FlCountryCodePicker _picker;
   late CountryCode _countryCode;
 
   @override
   void initState() {
     super.initState();
+    _countryCode = CountryCode(
+      name: '',
+      code: widget.initialCountryCode?.toUpperCase() ?? 'EG',
+      dialCode: '',
+    );
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _picker = FlCountryCodePicker(
+      searchBarDecoration: InputDecoration(
+        hintText: translate('country_hint', widget.langCode),
+      ),
+      title: Padding(
+        padding: const EdgeInsets.all(12.0),
+        child: Text(
+          translate('select_country_or_region', widget.langCode),
+          style: Theme.of(context).textTheme.titleLarge,
+        ),
+      ),
+      localize: true,
+    );
     _countryCode = _picker.countryCodes.firstWhere(
       (element) =>
           element.code.toLowerCase() ==
@@ -45,6 +71,9 @@ class _ModulePhoneFieldState extends State<ModulePhoneField> {
 
   String? get isoCode => _countryCode.code;
   String get dialCode => _countryCode.dialCode;
+
+  String translate(String key, String langCode) =>
+      ModuleLocalizations.tr(langCode, key);
 
   @override
   Widget build(BuildContext context) {
@@ -118,11 +147,11 @@ class _ModulePhoneFieldState extends State<ModulePhoneField> {
                           ),
                           const SizedBox(width: 8),
                           Padding(
-                            padding: const EdgeInsets.only(bottom: 3),
+                            padding: const EdgeInsets.only(top: 2),
                             child: Text(
                               _countryCode.dialCode,
                               style: const TextStyle(
-                                fontSize: 16,
+                                fontSize: 15,
                                 fontWeight: FontWeight.w500,
                               ),
                             ),
