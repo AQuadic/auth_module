@@ -1,3 +1,9 @@
+## 0.1.0
+
+* Fixed phone-with-verification login flow to perform `resendOtp` (via backend OTP callback) after `requestPhoneOtpLogin`, before navigating to `WaitingResponseScreen`.
+* Added explicit UI loading state to “generate new code” action using `ModuleButton.isLoading`.
+* Improved OTP scheme launch stability by relying on backend `otpResponse.scheme` in `WaitingResponseScreen`.
+
 ## 0.0.9
 
 * Added built-in authentication UI flow components:
