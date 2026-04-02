@@ -84,6 +84,38 @@ class AuthUiCubit extends Cubit<AuthUiState> {
     return true;
   }
 
+  Future<bool> requestPhoneOtpLogin({
+    required String phone,
+    required String phoneCountry,
+  }) async {
+    emit(state.copyWith(isLoading: true, clearError: true, clearSuccess: true));
+
+    final result = await _module.requestPhoneOtpLogin(
+      phoneCountry: phoneCountry,
+      phone: phone,
+    );
+
+    if (!result.isSuccess) {
+      emit(
+        state.copyWith(
+          isLoading: false,
+          errorMessage: result.error ?? result.message,
+        ),
+      );
+      return false;
+    }
+
+    emit(
+      state.copyWith(
+        isLoading: false,
+        successMessage: result.message,
+        verificationMessage: _module.otpResponse?.message,
+        otpResponse: _module.otpResponse,
+      ),
+    );
+    return true;
+  }
+
   Future<bool> loginWithSocial(SocialProvider provider) async {
     emit(state.copyWith(isLoading: true, clearError: true, clearSuccess: true));
 
@@ -171,12 +203,12 @@ class AuthUiCubit extends Cubit<AuthUiState> {
       );
       return false;
     }
-
     emit(
       state.copyWith(
         isLoading: false,
         successMessage: result.message,
         verificationMessage: _module.otpResponse?.message,
+        otpResponse: _module.otpResponse,
       ),
     );
     return true;
@@ -222,6 +254,11 @@ class AuthUiCubit extends Cubit<AuthUiState> {
         onVerified();
       }
     });
+  }
+
+  void stopWaitingForPhoneVerification() {
+    _waitingTimer?.cancel();
+    _waitingTimer = null;
   }
 
   void clearMessages() {

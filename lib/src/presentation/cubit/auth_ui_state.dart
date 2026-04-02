@@ -1,3 +1,4 @@
+import 'package:auth_module/src/models/otp_response.dart';
 import 'package:auth_module/src/models/user_model.dart';
 
 class AuthUiState {
@@ -9,6 +10,7 @@ class AuthUiState {
     this.waitingSeconds = 0,
     this.verificationMessage,
     this.user,
+    this.otpResponse,
   });
 
   final bool isLoading;
@@ -18,6 +20,7 @@ class AuthUiState {
   final int waitingSeconds;
   final String? verificationMessage;
   final UserModel? user;
+  final OtpResponse? otpResponse;
 
   AuthUiState copyWith({
     bool? isLoading,
@@ -31,6 +34,7 @@ class AuthUiState {
     bool clearVerificationMessage = false,
     UserModel? user,
     bool clearUser = false,
+    OtpResponse? otpResponse,
   }) {
     return AuthUiState(
       isLoading: isLoading ?? this.isLoading,
@@ -44,6 +48,7 @@ class AuthUiState {
           ? null
           : (verificationMessage ?? this.verificationMessage),
       user: clearUser ? null : (user ?? this.user),
+      otpResponse: otpResponse ?? this.otpResponse,
     );
   }
 }
