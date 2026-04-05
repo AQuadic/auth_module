@@ -1,3 +1,10 @@
+## 0.1.1
+
+* Added `ForgotPasswordScreen` with email, phone/CloudWA, and phone/OTP forgot flows.
+* Added `ResetPasswordScreen` for forgot-password reset with translated success snackbar feedback.
+* Added `ChangePasswordScreen` for authenticated password updates with old/new/confirm fields.
+* Added translated `Continue as Guest` action on the login screen that navigates directly to the main app screen.
+
 ## 0.1.0
 
 * Fixed phone-with-verification login flow to perform `resendOtp` (via backend OTP callback) after `requestPhoneOtpLogin`, before navigating to `WaitingResponseScreen`.
