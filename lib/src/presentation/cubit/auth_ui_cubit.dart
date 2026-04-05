@@ -214,6 +214,116 @@ class AuthUiCubit extends Cubit<AuthUiState> {
     return true;
   }
 
+  Future<bool> forgotPassword({
+    String? email,
+    String? phone,
+    String? phoneCountry,
+    String? resetType,
+  }) async {
+    emit(state.copyWith(isLoading: true, clearError: true, clearSuccess: true));
+
+    final result = await _module.forgotPassword(
+      email: email,
+      phone: phone,
+      phoneCountry: phoneCountry,
+      resetType: resetType,
+    );
+
+    if (!result.isSuccess) {
+      emit(
+        state.copyWith(
+          isLoading: false,
+          errorMessage: result.error ?? result.message,
+        ),
+      );
+      return false;
+    }
+
+    emit(
+      state.copyWith(
+        isLoading: false,
+        successMessage: result.message,
+        verificationMessage: _module.otpResponse?.message,
+        otpResponse: _module.otpResponse,
+      ),
+    );
+
+    return true;
+  }
+
+  Future<bool> resetPassword({
+    String? email,
+    String? phone,
+    String? phoneCountry,
+    required String password,
+    required String passwordConfirmation,
+    String? resetToken,
+    String? resetType,
+  }) async {
+    emit(state.copyWith(isLoading: true, clearError: true, clearSuccess: true));
+
+    final result = await _module.resetPassword(
+      email: email,
+      phone: phone,
+      phoneCountry: phoneCountry,
+      password: password,
+      passwordConfirmation: passwordConfirmation,
+      resetToken: resetToken,
+      resetType: resetType,
+    );
+
+    if (!result.isSuccess) {
+      emit(
+        state.copyWith(
+          isLoading: false,
+          errorMessage: result.error ?? result.message,
+        ),
+      );
+      return false;
+    }
+
+    emit(
+      state.copyWith(
+        isLoading: false,
+        successMessage: result.message,
+      ),
+    );
+    return true;
+  }
+
+  Future<bool> changePassword({
+    required String oldPassword,
+    required String newPassword,
+    required String confirmPassword,
+  }) async {
+    emit(state.copyWith(isLoading: true, clearError: true, clearSuccess: true));
+
+    final result = await _module.changePassword(
+      oldPassword: oldPassword,
+      newPassword: newPassword,
+      confirmPassword: confirmPassword,
+    );
+
+    if (!result.isSuccess) {
+      emit(
+        state.copyWith(
+          isLoading: false,
+          errorMessage: result.error ?? result.message,
+        ),
+      );
+      return false;
+    }
+
+    emit(
+      state.copyWith(
+        isLoading: false,
+        successMessage: result.message,
+      ),
+    );
+
+    return true;
+  }
+
   void startOtpCountdown({int seconds = 60}) {
     _countdownTimer?.cancel();
     emit(state.copyWith(waitingSeconds: seconds));
