@@ -6,6 +6,8 @@ Supports:
 - Email + password login
 - Phone + country + password login
 - Phone + country login without password (OTP flow with CloudWA/check-state pattern)
+- Optional forgot-password entry on login screen (`forgetType`)
+- Forgot-password UI flow for email, phone+CloudWA, and phone+OTP
 - Social login token exchange (Google/Apple)
 - Firebase Auth token exchange (including phone OTP credential flow)
 - Sign up
@@ -129,6 +131,12 @@ The module supports the 3-step forgot/reset cycle:
 
 ```dart
 final forgot = await auth.forgotPassword(
+	email: 'user@example.com',
+	resetType: 'mail_otp',
+);
+
+// OR phone flow
+final forgotByPhone = await auth.forgotPassword(
 	phoneCountry: 'EG',
 	phone: '01000000000',
 	// resetType defaults to 'whatsapp_send'
@@ -170,6 +178,110 @@ final change = await auth.changePassword(
 	confirmPassword: 'NewPass123',
 );
 ```
+
+## UI screens usage
+
+### LoginScreen with optional forgot password
+
+If `forgetType` is null, forgot-password button is hidden.
+
+```dart
+LoginScreen(
+	loginType: LoginType.emailAndPassword,
+	forgetType: ForgetType.email, // null => hide forgot button
+	langCode: 'en',
+	mainAppScreen: const HomeScreen(),
+	// Optional custom look for forgot screen
+	forgetTitle: 'Reset your password',
+	forgetSubtitle: 'We will send a verification code',
+	forgetLogo: const Icon(Icons.lock_reset),
+);
+```
+
+Supported forgot types:
+- `ForgetType.email`: email field, then goes to `OtpScreen`, then `ResetPasswordScreen`
+- `ForgetType.phoneWithVerificationCloudwa`: phone field, then `WaitingResponseScreen`, then `ResetPasswordScreen`
+- `ForgetType.phoneWithVerificationOtp`: phone field, then `OtpScreen`, then `ResetPasswordScreen`
+
+### Continue as Guest
+
+The login screen also shows a translated `Continue as Guest` action at the bottom.
+It navigates directly to `mainAppScreen` and clears the navigation stack.
+
+### ResetPasswordScreen (forgot flow)
+
+`ResetPasswordScreen` now only handles forgot-password reset and contains:
+- New password
+- Confirm new password
+
+After successful reset, it shows a translated success snackbar with the primary color, then returns to the login screen.
+
+```dart
+ResetPasswordScreen(
+	langCode: 'en',
+	mainAppScreen: const HomeScreen(),
+	email: 'user@example.com', // or phone + phoneCountry
+	resetType: 'mail_otp',
+	// resetToken optional, uses saved token from verify/check-state
+);
+```
+
+### ChangePasswordScreen (in-app password update)
+
+`ChangePasswordScreen` is a separate screen with 3 fields:
+- Old password
+- New password
+- Confirm new password
+
+```dart
+ChangePasswordScreen(
+	langCode: 'en',
+	mainAppScreen: const HomeScreen(),
+	title: 'Change Password',
+	subtitle: 'Keep your account secure',
+);
+```
+
+Use this screen for authenticated password updates. It includes:
+- Old password
+- New password
+- Confirm new password
+
+It uses the regular change-password API flow, not the forgot/reset token flow.
+
+### Direct ForgotPasswordScreen usage
+
+```dart
+ForgotPasswordScreen(
+	forgetType: ForgetType.phoneWithVerificationOtp,
+	langCode: 'ar',
+	mainAppScreen: const HomeScreen(),
+	title: 'نسيت كلمة المرور؟',
+	subtitle: 'ادخل رقم الهاتف للمتابعة',
+);
+```
+
+`ForgotPasswordScreen` accepts `title`, `subtitle`, and `logo` like `LoginScreen`.
+
+## Localization
+
+Localized for English and Arabic in `ModuleLocalizations`:
+- `forgot_password`
+- `forgot_password_msg`
+- `reset_password`
+- `reset_password_msg`
+- `reset_password_success_title`
+- `reset_password_success_msg`
+- `change_password`
+- `change_password_msg`
+- `old_password`
+- `new_password`
+- `confirm_new_password`
+- `old_password_is_required`
+- `new_password_is_required`
+- `confirm_new_password_is_required`
+- `passwords_not_match`
+- `continue_as_guest`
 
 ### 4) Social login
 
