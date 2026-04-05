@@ -6,20 +6,34 @@ class _AuthUserService {
   final AuthModule _module;
 
   Future<AuthResult<void>> forgotPassword({
-    required String phoneCountry,
-    required String phone,
-    String resetType = 'whatsapp_send',
+    String? email,
+    String? phoneCountry,
+    String? phone,
+    String? resetType,
   }) async {
-    if (!_module._isNotBlank(phoneCountry) || !_module._isNotBlank(phone)) {
-      return AuthResult.failure('phoneCountry and phone are required.');
+    final hasEmail = _module._isNotBlank(email);
+    final hasPhone =
+        _module._isNotBlank(phone) && _module._isNotBlank(phoneCountry);
+
+    if (!hasEmail && !hasPhone) {
+      return AuthResult.failure(
+        'Either email or phoneCountry and phone are required.',
+      );
     }
+
+    final effectiveResetType =
+        resetType ??
+        (hasEmail
+            ? _module.config.defaultResendEmailVerifyType
+            : _module.config.defaultPhoneOtpVerifyType);
 
     final value = await _module._safePost(
       _module.config.forgetPasswordEndpoint,
       body: {
-        'phone_country': phoneCountry,
-        'phone': phone,
-        'reset_type': resetType,
+        if (hasEmail) 'email': email,
+        if (hasPhone) 'phone_country': phoneCountry,
+        if (hasPhone) 'phone': phone,
+        'reset_type': effectiveResetType,
       },
     );
 
@@ -48,15 +62,22 @@ class _AuthUserService {
   }
 
   Future<AuthResult<void>> resetPassword({
-    required String phone,
-    required String phoneCountry,
+    String? email,
+    String? phone,
+    String? phoneCountry,
     required String password,
     required String passwordConfirmation,
     String? resetToken,
-    String resetType = 'whatsapp_send',
+    String? resetType,
   }) async {
-    if (!_module._isNotBlank(phone) || !_module._isNotBlank(phoneCountry)) {
-      return AuthResult.failure('phone and phoneCountry are required.');
+    final hasEmail = _module._isNotBlank(email);
+    final hasPhone =
+        _module._isNotBlank(phone) && _module._isNotBlank(phoneCountry);
+
+    if (!hasEmail && !hasPhone) {
+      return AuthResult.failure(
+        'Either email or phone and phoneCountry are required.',
+      );
     }
     if (!_module._isNotBlank(password) ||
         !_module._isNotBlank(passwordConfirmation)) {
@@ -75,15 +96,22 @@ class _AuthUserService {
       );
     }
 
+    final effectiveResetType =
+        resetType ??
+        (hasEmail
+            ? _module.config.defaultResendEmailVerifyType
+            : _module.config.defaultPhoneOtpVerifyType);
+
     final value = await _module._safePost(
       _module.config.forgetPasswordEndpoint,
       body: {
-        'phone': phone,
-        'phone_country': phoneCountry,
+        if (hasEmail) 'email': email,
+        if (hasPhone) 'phone': phone,
+        if (hasPhone) 'phone_country': phoneCountry,
         'reset_token': effectiveResetToken,
         'password': password,
         'password_confirmation': passwordConfirmation,
-        'reset_type': resetType,
+        'reset_type': effectiveResetType,
       },
     );
 

@@ -257,11 +257,13 @@ class AuthModule {
   }
 
   Future<AuthResult<void>> forgotPassword({
-    required String phoneCountry,
-    required String phone,
-    String resetType = 'whatsapp_send',
+    String? email,
+    String? phoneCountry,
+    String? phone,
+    String? resetType,
   }) {
     return _userService.forgotPassword(
+      email: email,
       phoneCountry: phoneCountry,
       phone: phone,
       resetType: resetType,
@@ -269,14 +271,16 @@ class AuthModule {
   }
 
   Future<AuthResult<void>> resetPassword({
-    required String phone,
-    required String phoneCountry,
+    String? email,
+    String? phone,
+    String? phoneCountry,
     required String password,
     required String passwordConfirmation,
     String? resetToken,
-    String resetType = 'whatsapp_send',
+    String? resetType,
   }) {
     return _userService.resetPassword(
+      email: email,
       phone: phone,
       phoneCountry: phoneCountry,
       password: password,
