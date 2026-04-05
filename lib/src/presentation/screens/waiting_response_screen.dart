@@ -14,6 +14,7 @@ class WaitingResponseScreen extends StatefulWidget {
     required this.country,
     required this.langCode,
     required this.nextScreen,
+    this.clearStackOnVerified = true,
     this.primaryColor,
     this.onInterceptorDialogFlagChange,
     this.cloudwaLogo,
@@ -23,6 +24,7 @@ class WaitingResponseScreen extends StatefulWidget {
   final String country;
   final String langCode;
   final Widget nextScreen;
+  final bool clearStackOnVerified;
   final Color? primaryColor;
   final ValueChanged<bool>? onInterceptorDialogFlagChange;
   final Widget? cloudwaLogo;
@@ -68,10 +70,18 @@ class _WaitingResponseScreenState extends State<WaitingResponseScreen> {
   }
 
   void _onVerified() {
-    Navigator.of(context).pushAndRemoveUntil(
-      MaterialPageRoute(builder: (_) => widget.nextScreen),
-      (route) => false,
-    );
+    if (widget.clearStackOnVerified) {
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(builder: (_) => widget.nextScreen),
+        (route) => false,
+      );
+      return;
+    } else {
+      widget.onInterceptorDialogFlagChange?.call(true);
+      Navigator.of(
+        context,
+      ).push(MaterialPageRoute(builder: (_) => widget.nextScreen));
+    }
   }
 
   Future<void> _resend(AuthUiCubit cubit) async {
@@ -96,7 +106,6 @@ class _WaitingResponseScreenState extends State<WaitingResponseScreen> {
     return BlocBuilder<AuthUiCubit, AuthUiState>(
       builder: (context, state) {
         final cubit = context.read<AuthUiCubit>();
-        final message = state.verificationMessage;
 
         return Scaffold(
           appBar: AppBar(title: Text(tr('fast_verification'))),

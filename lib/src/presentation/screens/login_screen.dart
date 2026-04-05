@@ -9,6 +9,7 @@ class LoginScreen extends StatefulWidget {
     required this.loginType,
     required this.langCode,
     required this.mainAppScreen,
+    this.forgetType,
     this.logo,
     this.title,
     this.subtitle,
@@ -24,11 +25,15 @@ class LoginScreen extends StatefulWidget {
     this.module,
     this.onInterceptorDialogFlagChange,
     this.cloudwaLogo,
+    this.forgetLogo,
+    this.forgetTitle,
+    this.forgetSubtitle,
   });
 
   final LoginType loginType;
   final String langCode;
   final Widget mainAppScreen;
+  final ForgetType? forgetType;
   final Widget? logo;
   final String? title;
   final String? subtitle;
@@ -44,6 +49,9 @@ class LoginScreen extends StatefulWidget {
   final AuthModule? module;
   final ValueChanged<bool>? onInterceptorDialogFlagChange;
   final Widget? cloudwaLogo;
+  final Widget? forgetLogo;
+  final String? forgetTitle;
+  final String? forgetSubtitle;
 
   @override
   State<LoginScreen> createState() => _LoginScreenState();
@@ -79,7 +87,7 @@ class _LoginScreenState extends State<LoginScreen> {
         phone: _phoneController.text.trim(),
         password: _passwordController.text,
       );
-    } else if (widget.loginType == LoginType.phoneWithVerificationCode) {
+    } else if (widget.loginType == LoginType.phoneWithVerificationCloudwa) {
       final loginSuccess = await cubit.requestPhoneOtpLogin(
         phone: _phoneController.text.trim(),
         phoneCountry: cubit.state.phoneCountryCode,
@@ -105,6 +113,35 @@ class _LoginScreenState extends State<LoginScreen> {
                   onInterceptorDialogFlagChange:
                       widget.onInterceptorDialogFlagChange,
                   cloudwaLogo: widget.cloudwaLogo,
+                ),
+              ),
+            ),
+          );
+        }
+      }
+    } else if (widget.loginType == LoginType.phoneWithVerificationOtp) {
+      final loginSuccess = await cubit.requestPhoneOtpLogin(
+        phone: _phoneController.text.trim(),
+        phoneCountry: cubit.state.phoneCountryCode,
+      );
+      if (loginSuccess && mounted) {
+        // Call resend to get the OTP response with scheme
+        final resendSuccess = await cubit.resendOtp(
+          phone: _phoneController.text.trim(),
+          phoneCountry: cubit.state.phoneCountryCode,
+          isNew: true,
+        );
+        if (resendSuccess && mounted) {
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (_) => BlocProvider.value(
+                value: cubit,
+                child: OtpScreen(
+                  phone: _phoneController.text.trim(),
+                  phoneCountry: cubit.state.phoneCountryCode,
+                  langCode: widget.langCode,
+                  mainAppScreen: widget.mainAppScreen,
+                  primaryColor: widget.primaryColor,
                 ),
               ),
             ),
@@ -221,7 +258,9 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                       const SizedBox(height: 16),
                       if (widget.loginType !=
-                          LoginType.phoneWithVerificationCode)
+                              LoginType.phoneWithVerificationCloudwa &&
+                          widget.loginType !=
+                              LoginType.phoneWithVerificationOtp)
                         ModulePasswordTextField(
                           title:
                               widget.passwordLabel ??
@@ -249,6 +288,51 @@ class _LoginScreenState extends State<LoginScreen> {
                         color: color,
                         isLoading: state.isLoading,
                       ),
+                      if (widget.forgetType != null) ...[
+                        const SizedBox(height: 8),
+                        Align(
+                          alignment: Alignment.centerRight,
+                          child: TextButton(
+                            onPressed: () {
+                              Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder: (_) => ForgotPasswordScreen(
+                                    forgetType: widget.forgetType!,
+                                    langCode: widget.langCode,
+                                    mainAppScreen: LoginScreen(
+                                      loginType: widget.loginType,
+                                      langCode: widget.langCode,
+                                      mainAppScreen: widget.mainAppScreen,
+                                      forgetType: widget.forgetType,
+                                      logo: widget.logo,
+                                      title: widget.title,
+                                      subtitle: widget.subtitle,
+                                      primaryColor: widget.primaryColor,
+                                      socialProviders: widget.socialProviders,
+                                      module: widget.module,
+                                      onInterceptorDialogFlagChange:
+                                          widget.onInterceptorDialogFlagChange,
+                                      cloudwaLogo: widget.cloudwaLogo,
+                                    ),
+                                    logo: widget.forgetLogo,
+                                    title: widget.forgetTitle,
+                                    subtitle: widget.forgetSubtitle,
+                                    primaryColor: widget.primaryColor,
+                                    module: widget.module,
+                                    onInterceptorDialogFlagChange:
+                                        widget.onInterceptorDialogFlagChange,
+                                    cloudwaLogo: widget.cloudwaLogo,
+                                  ),
+                                ),
+                              );
+                            },
+                            child: Text(
+                              translate('forgot_password', widget.langCode),
+                              style: TextStyle(color: color),
+                            ),
+                          ),
+                        ),
+                      ],
                       if (socialProviders != null &&
                           socialProviders.isNotEmpty) ...[
                         const SizedBox(height: 24),
@@ -288,6 +372,23 @@ class _LoginScreenState extends State<LoginScreen> {
                               .toList(),
                         ),
                       ],
+                      const SizedBox(height: 20),
+                      Center(
+                        child: TextButton(
+                          onPressed: () {
+                            Navigator.of(context).pushAndRemoveUntil(
+                              MaterialPageRoute(
+                                builder: (_) => widget.mainAppScreen,
+                              ),
+                              (route) => false,
+                            );
+                          },
+                          child: Text(
+                            translate('continue_as_guest', widget.langCode),
+                            style: TextStyle(color: color),
+                          ),
+                        ),
+                      ),
                     ],
                   ),
                 ),
@@ -305,9 +406,13 @@ class LoginWithEmailAndPassword extends StatelessWidget {
     super.key,
     required this.langCode,
     required this.mainAppScreen,
+    this.forgetType,
     this.logo,
+    this.forgetLogo,
     this.title,
+    this.forgetTitle,
     this.subtitle,
+    this.forgetSubtitle,
     this.primaryColor,
     this.socialProviders,
     this.module,
@@ -316,9 +421,13 @@ class LoginWithEmailAndPassword extends StatelessWidget {
 
   final String langCode;
   final Widget mainAppScreen;
+  final ForgetType? forgetType;
   final Widget? logo;
+  final Widget? forgetLogo;
   final String? title;
+  final String? forgetTitle;
   final String? subtitle;
+  final String? forgetSubtitle;
   final Color? primaryColor;
   final List<SocialProvider>? socialProviders;
   final AuthModule? module;
@@ -330,9 +439,13 @@ class LoginWithEmailAndPassword extends StatelessWidget {
       loginType: LoginType.emailAndPassword,
       langCode: langCode,
       mainAppScreen: mainAppScreen,
+      forgetType: forgetType,
       logo: logo,
+      forgetLogo: forgetLogo,
       title: title,
+      forgetTitle: forgetTitle,
       subtitle: subtitle,
+      forgetSubtitle: forgetSubtitle,
       primaryColor: primaryColor,
       socialProviders: socialProviders,
       module: module,
@@ -346,9 +459,13 @@ class LoginWithPhoneAndPassword extends StatelessWidget {
     super.key,
     required this.langCode,
     required this.mainAppScreen,
+    this.forgetType,
     this.logo,
+    this.forgetLogo,
     this.title,
+    this.forgetTitle,
     this.subtitle,
+    this.forgetSubtitle,
     this.primaryColor,
     this.socialProviders,
     this.module,
@@ -357,9 +474,13 @@ class LoginWithPhoneAndPassword extends StatelessWidget {
 
   final String langCode;
   final Widget mainAppScreen;
+  final ForgetType? forgetType;
   final Widget? logo;
+  final Widget? forgetLogo;
   final String? title;
+  final String? forgetTitle;
   final String? subtitle;
+  final String? forgetSubtitle;
   final Color? primaryColor;
   final List<SocialProvider>? socialProviders;
   final AuthModule? module;
@@ -371,9 +492,13 @@ class LoginWithPhoneAndPassword extends StatelessWidget {
       loginType: LoginType.phoneAndPassword,
       langCode: langCode,
       mainAppScreen: mainAppScreen,
+      forgetType: forgetType,
       logo: logo,
+      forgetLogo: forgetLogo,
       title: title,
+      forgetTitle: forgetTitle,
       subtitle: subtitle,
+      forgetSubtitle: forgetSubtitle,
       primaryColor: primaryColor,
       socialProviders: socialProviders,
       module: module,
@@ -387,9 +512,13 @@ class LoginWithPhoneAndVerificationCode extends StatelessWidget {
     super.key,
     required this.langCode,
     required this.mainAppScreen,
+    this.forgetType,
     this.logo,
+    this.forgetLogo,
     this.title,
+    this.forgetTitle,
     this.subtitle,
+    this.forgetSubtitle,
     this.primaryColor,
     this.socialProviders,
     this.module,
@@ -398,9 +527,13 @@ class LoginWithPhoneAndVerificationCode extends StatelessWidget {
 
   final String langCode;
   final Widget mainAppScreen;
+  final ForgetType? forgetType;
   final Widget? logo;
+  final Widget? forgetLogo;
   final String? title;
+  final String? forgetTitle;
   final String? subtitle;
+  final String? forgetSubtitle;
   final Color? primaryColor;
   final List<SocialProvider>? socialProviders;
   final AuthModule? module;
@@ -409,12 +542,16 @@ class LoginWithPhoneAndVerificationCode extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return LoginScreen(
-      loginType: LoginType.phoneWithVerificationCode,
+      loginType: LoginType.phoneWithVerificationCloudwa,
       langCode: langCode,
       mainAppScreen: mainAppScreen,
+      forgetType: forgetType,
       logo: logo,
+      forgetLogo: forgetLogo,
       title: title,
+      forgetTitle: forgetTitle,
       subtitle: subtitle,
+      forgetSubtitle: forgetSubtitle,
       primaryColor: primaryColor,
       socialProviders: socialProviders,
       module: module,

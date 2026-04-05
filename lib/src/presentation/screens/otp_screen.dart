@@ -68,10 +68,11 @@ class _OtpScreenState extends State<OtpScreen> {
       return;
     }
 
-    Navigator.of(context).pushAndRemoveUntil(
-      MaterialPageRoute(builder: (_) => widget.mainAppScreen),
-      (route) => false,
-    );
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(builder: (_) => widget.mainAppScreen),
+        (route) => false,
+      );
+      return;
   }
 
   Future<void> _resend(AuthUiCubit cubit) async {
