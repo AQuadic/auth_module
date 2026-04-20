@@ -1,6 +1,7 @@
 import 'package:auth_module/src/presentation/cubit/auth_ui_cubit.dart';
 import 'package:auth_module/src/presentation/cubit/auth_ui_state.dart';
 import 'package:auth_module/src/presentation/localization/module_localizations.dart';
+import 'package:auth_module/src/presentation/screens/complete_profile_screen.dart';
 import 'package:auth_module/src/presentation/widgets/module_button.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -18,6 +19,7 @@ class WaitingResponseScreen extends StatefulWidget {
     this.primaryColor,
     this.onInterceptorDialogFlagChange,
     this.cloudwaLogo,
+    this.hasCompleteProfile = false,
   });
 
   final String phone;
@@ -28,6 +30,7 @@ class WaitingResponseScreen extends StatefulWidget {
   final Color? primaryColor;
   final ValueChanged<bool>? onInterceptorDialogFlagChange;
   final Widget? cloudwaLogo;
+  final bool hasCompleteProfile;
 
   @override
   State<WaitingResponseScreen> createState() => _WaitingResponseScreenState();
@@ -70,18 +73,37 @@ class _WaitingResponseScreenState extends State<WaitingResponseScreen> {
   }
 
   void _onVerified() {
+    _handleVerifiedRoute();
+  }
+
+  Future<void> _handleVerifiedRoute() async {
+    final fetchedUser = await _cubit.fetchCurrentUser();
+    if (!mounted) {
+      return;
+    }
+
+    final user = fetchedUser ?? _cubit.state.user;
+    final shouldCompleteProfile =
+        widget.hasCompleteProfile && (user?.isDefaultName ?? false);
+
+    final target = shouldCompleteProfile
+        ? CompleteProfileScreen(
+            langCode: widget.langCode,
+            mainAppScreen: widget.nextScreen,
+            primaryColor: widget.primaryColor,
+          )
+        : widget.nextScreen;
+
     if (widget.clearStackOnVerified) {
       Navigator.of(context).pushAndRemoveUntil(
-        MaterialPageRoute(builder: (_) => widget.nextScreen),
+        MaterialPageRoute(builder: (_) => target),
         (route) => false,
       );
       return;
-    } else {
-      widget.onInterceptorDialogFlagChange?.call(true);
-      Navigator.of(
-        context,
-      ).push(MaterialPageRoute(builder: (_) => widget.nextScreen));
     }
+
+    widget.onInterceptorDialogFlagChange?.call(true);
+    Navigator.of(context).push(MaterialPageRoute(builder: (_) => target));
   }
 
   Future<void> _resend(AuthUiCubit cubit) async {
