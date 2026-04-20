@@ -1,6 +1,9 @@
 import 'dart:async';
 
 import 'package:auth_module/src/core/auth_module_service.dart';
+import 'package:auth_module/src/models/user_model.dart';
+import 'package:cross_file/cross_file.dart';
+import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -120,6 +123,57 @@ class AuthUiCubit extends Cubit<AuthUiState> {
     emit(state.copyWith(isLoading: true, clearError: true, clearSuccess: true));
 
     final result = await _module.loginWithSocial(provider: provider);
+    if (!result.isSuccess) {
+      emit(
+        state.copyWith(
+          isLoading: false,
+          errorMessage: result.error ?? result.message,
+        ),
+      );
+      return false;
+    }
+
+    emit(
+      state.copyWith(
+        isLoading: false,
+        successMessage: result.message,
+        user: result.data,
+      ),
+    );
+    return true;
+  }
+
+  Future<bool> signUp({
+    required String name,
+    String? email,
+    String? phone,
+    String? phoneCountry,
+    String? password,
+    String? passwordConfirmation,
+    int? countryId,
+    XFile? image,
+  }) async {
+    emit(state.copyWith(isLoading: true, clearError: true, clearSuccess: true));
+
+    MultipartFile? multipartImage;
+    if (image != null && image.path.isNotEmpty) {
+      multipartImage = await MultipartFile.fromFile(
+        image.path,
+        filename: image.name,
+      );
+    }
+
+    final result = await _module.signUp(
+      name: name,
+      email: email,
+      phone: phone,
+      phoneCountry: phoneCountry,
+      password: password,
+      passwordConfirmation: passwordConfirmation,
+      countryId: countryId,
+      image: multipartImage,
+    );
+
     if (!result.isSuccess) {
       emit(
         state.copyWith(
@@ -282,12 +336,7 @@ class AuthUiCubit extends Cubit<AuthUiState> {
       return false;
     }
 
-    emit(
-      state.copyWith(
-        isLoading: false,
-        successMessage: result.message,
-      ),
-    );
+    emit(state.copyWith(isLoading: false, successMessage: result.message));
     return true;
   }
 
@@ -314,13 +363,73 @@ class AuthUiCubit extends Cubit<AuthUiState> {
       return false;
     }
 
+    emit(state.copyWith(isLoading: false, successMessage: result.message));
+
+    return true;
+  }
+
+  Future<UserModel?> fetchCurrentUser() async {
+    emit(state.copyWith(isLoading: true, clearError: true, clearSuccess: true));
+
+    final result = await _module.fetchCurrentUser();
+    if (!result.isSuccess) {
+      emit(
+        state.copyWith(
+          isLoading: false,
+          errorMessage: result.error ?? result.message,
+        ),
+      );
+      return null;
+    }
+
     emit(
       state.copyWith(
         isLoading: false,
         successMessage: result.message,
+        user: result.data,
       ),
     );
+    return result.data;
+  }
 
+  Future<bool> updateProfile({
+    XFile? image,
+    String? email,
+    String? name,
+    String? countryCode,
+    String? phone,
+    DateTime? birthday,
+    String? gender,
+  }) async {
+    emit(state.copyWith(isLoading: true, clearError: true, clearSuccess: true));
+
+    final result = await _module.updateUser(
+      image: image,
+      email: email,
+      name: name,
+      countryCode: countryCode,
+      phone: phone,
+      birthday: birthday,
+      gender: gender,
+    );
+
+    if (!result.isSuccess) {
+      emit(
+        state.copyWith(
+          isLoading: false,
+          errorMessage: result.error ?? result.message,
+        ),
+      );
+      return false;
+    }
+
+    emit(
+      state.copyWith(
+        isLoading: false,
+        successMessage: result.message,
+        user: result.data,
+      ),
+    );
     return true;
   }
 
