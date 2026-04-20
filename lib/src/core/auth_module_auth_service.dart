@@ -93,7 +93,7 @@ class _AuthAuthService {
 
   Future<AuthResult<UserModel>> loginWithSocial({
     required SocialProvider provider,
-  }) async {  
+  }) async {
     final signInResult = await _module._socialSignInClient.signIn(
       provider: provider.name,
       config: _module.config,
@@ -195,7 +195,8 @@ class _AuthAuthService {
     String provider = 'FIREBASE',
     String? verificationId,
   }) async {
-    final activeVerificationId = verificationId ?? _module._firebaseVerificationId;
+    final activeVerificationId =
+        verificationId ?? _module._firebaseVerificationId;
     if (!_module._isNotBlank(activeVerificationId)) {
       return AuthResult.failure(
         'verificationId is missing. Call sendFirebasePhoneOtp first.',
@@ -283,9 +284,9 @@ class _AuthAuthService {
 
   Future<AuthResult<UserModel>> signUp({
     required String name,
-    required String email,
-    required String password,
-    required String passwordConfirmation,
+    String? email,
+    String? password,
+    String? passwordConfirmation,
     String? phoneCountry,
     String? phone,
     int? countryId,
@@ -295,9 +296,10 @@ class _AuthAuthService {
       _module.config.signupEndpoint,
       multiPartBody: FormData.fromMap({
         'name': name,
-        'email': email,
-        'password': password,
-        'password_confirmation': passwordConfirmation,
+        if (email != null && email.isNotEmpty) 'email': email,
+        if (password != null && password.isNotEmpty) 'password': password,
+        if (passwordConfirmation != null && passwordConfirmation.isNotEmpty)
+          'password_confirmation': passwordConfirmation,
         if (phone != null && phone.isNotEmpty) 'phone': phone,
         if (phoneCountry != null && phoneCountry.isNotEmpty)
           'phone_country': phoneCountry,

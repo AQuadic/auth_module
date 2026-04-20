@@ -27,7 +27,6 @@ class AuthModule {
 
   static AuthModule get instance => _instance ??= AuthModule._();
 
-
   AuthModule._();
 
   AuthModule({
@@ -304,9 +303,9 @@ class AuthModule {
 
   Future<AuthResult<UserModel>> signUp({
     required String name,
-    required String email,
-    required String password,
-    required String passwordConfirmation,
+    String? email,
+    String? password,
+    String? passwordConfirmation,
     String? phoneCountry,
     String? phone,
     int? countryId,
@@ -360,10 +359,7 @@ class AuthModule {
     bool callApi = true,
     bool withFirebase = true,
   }) {
-    return _userService.logout(
-      callApi: callApi,
-      withFirebase: withFirebase,
-    );
+    return _userService.logout(callApi: callApi, withFirebase: withFirebase);
   }
 
   Future<dynamic> _safePost(
