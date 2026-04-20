@@ -28,6 +28,13 @@ class LoginScreen extends StatefulWidget {
     this.forgetLogo,
     this.forgetTitle,
     this.forgetSubtitle,
+    this.signupLogo,
+    this.signupTitle,
+    this.signupSubtitle,
+    this.signupHasEmail = true,
+    this.signupHasPhoneNumber = true,
+    this.signupHasPassword = true,
+    this.hasCompleteProfile = false,
   });
 
   final LoginType loginType;
@@ -52,6 +59,13 @@ class LoginScreen extends StatefulWidget {
   final Widget? forgetLogo;
   final String? forgetTitle;
   final String? forgetSubtitle;
+  final Widget? signupLogo;
+  final String? signupTitle;
+  final String? signupSubtitle;
+  final bool signupHasEmail;
+  final bool signupHasPhoneNumber;
+  final bool signupHasPassword;
+  final bool hasCompleteProfile;
 
   @override
   State<LoginScreen> createState() => _LoginScreenState();
@@ -62,6 +76,7 @@ class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _phoneController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
+  bool _isHandlingPostLoginRoute = false;
 
   @override
   void dispose() {
@@ -109,6 +124,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   country: cubit.state.phoneCountryCode,
                   langCode: widget.langCode,
                   nextScreen: widget.mainAppScreen,
+                  hasCompleteProfile: widget.hasCompleteProfile,
                   primaryColor: widget.primaryColor,
                   onInterceptorDialogFlagChange:
                       widget.onInterceptorDialogFlagChange,
@@ -141,6 +157,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   phoneCountry: cubit.state.phoneCountryCode,
                   langCode: widget.langCode,
                   mainAppScreen: widget.mainAppScreen,
+                  hasCompleteProfile: widget.hasCompleteProfile,
                   primaryColor: widget.primaryColor,
                 ),
               ),
@@ -149,6 +166,44 @@ class _LoginScreenState extends State<LoginScreen> {
         }
       }
     }
+  }
+
+  Future<void> _handlePostLoginRoute(AuthUiCubit cubit) async {
+    if (_isHandlingPostLoginRoute || !mounted) {
+      return;
+    }
+    _isHandlingPostLoginRoute = true;
+
+    final fetchedUser = await cubit.fetchCurrentUser();
+    if (!mounted) {
+      _isHandlingPostLoginRoute = false;
+      return;
+    }
+
+    final user = fetchedUser ?? cubit.state.user;
+    final shouldCompleteProfile =
+        widget.hasCompleteProfile && (user?.isDefaultName ?? false);
+
+    if (shouldCompleteProfile) {
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(
+          builder: (_) => CompleteProfileScreen(
+            langCode: widget.langCode,
+            mainAppScreen: widget.mainAppScreen,
+            primaryColor: widget.primaryColor,
+          ),
+        ),
+        (route) => false,
+      );
+      _isHandlingPostLoginRoute = false;
+      return;
+    }
+
+    Navigator.of(context).pushAndRemoveUntil(
+      MaterialPageRoute(builder: (_) => widget.mainAppScreen),
+      (route) => false,
+    );
+    _isHandlingPostLoginRoute = false;
   }
 
   String translate(String key, String langCode) =>
@@ -163,10 +218,7 @@ class _LoginScreenState extends State<LoginScreen> {
       child: BlocConsumer<AuthUiCubit, AuthUiState>(
         listener: (context, state) {
           if (state.user != null) {
-            Navigator.of(context).pushAndRemoveUntil(
-              MaterialPageRoute(builder: (_) => widget.mainAppScreen),
-              (route) => false,
-            );
+            _handlePostLoginRoute(context.read<AuthUiCubit>());
           }
         },
         builder: (context, state) {
@@ -313,6 +365,16 @@ class _LoginScreenState extends State<LoginScreen> {
                                       onInterceptorDialogFlagChange:
                                           widget.onInterceptorDialogFlagChange,
                                       cloudwaLogo: widget.cloudwaLogo,
+                                      signupLogo: widget.signupLogo,
+                                      signupTitle: widget.signupTitle,
+                                      signupSubtitle: widget.signupSubtitle,
+                                      signupHasEmail: widget.signupHasEmail,
+                                      signupHasPhoneNumber:
+                                          widget.signupHasPhoneNumber,
+                                      signupHasPassword:
+                                          widget.signupHasPassword,
+                                      hasCompleteProfile:
+                                          widget.hasCompleteProfile,
                                     ),
                                     logo: widget.forgetLogo,
                                     title: widget.forgetTitle,
@@ -372,6 +434,50 @@ class _LoginScreenState extends State<LoginScreen> {
                               .toList(),
                         ),
                       ],
+                      if (!widget.hasCompleteProfile) ...[
+                        const SizedBox(height: 8),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              translate('dont_have_account', widget.langCode),
+                            ),
+                            TextButton(
+                              onPressed: () {
+                                Navigator.of(context).push(
+                                  MaterialPageRoute(
+                                    builder: (_) => SignUpScreen(
+                                      langCode: widget.langCode,
+                                      mainAppScreen: widget.mainAppScreen,
+                                      logo: widget.signupLogo,
+                                      title: widget.signupTitle,
+                                      subtitle: widget.signupSubtitle,
+                                      primaryColor: widget.primaryColor,
+                                      emailLabel: widget.emailLabel,
+                                      phoneLabel: widget.phoneLabel,
+                                      passwordLabel: widget.passwordLabel,
+                                      emailHint: widget.emailHint,
+                                      phoneHint: widget.phoneHint,
+                                      passwordHint: widget.passwordHint,
+                                      onInterceptorDialogFlagChange:
+                                          widget.onInterceptorDialogFlagChange,
+                                      cloudwaLogo: widget.cloudwaLogo,
+                                      hasEmail: widget.signupHasEmail,
+                                      hasPhoneNumber:
+                                          widget.signupHasPhoneNumber,
+                                      hasPassword: widget.signupHasPassword,
+                                    ),
+                                  ),
+                                );
+                              },
+                              child: Text(
+                                translate('sign_up', widget.langCode),
+                                style: TextStyle(color: color),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
                       const SizedBox(height: 20),
                       Center(
                         child: TextButton(
@@ -417,6 +523,13 @@ class LoginWithEmailAndPassword extends StatelessWidget {
     this.socialProviders,
     this.module,
     this.onInterceptorDialogFlagChange,
+    this.signupLogo,
+    this.signupTitle,
+    this.signupSubtitle,
+    this.signupHasEmail = true,
+    this.signupHasPhoneNumber = true,
+    this.signupHasPassword = true,
+    this.hasCompleteProfile = false,
   });
 
   final String langCode;
@@ -432,6 +545,13 @@ class LoginWithEmailAndPassword extends StatelessWidget {
   final List<SocialProvider>? socialProviders;
   final AuthModule? module;
   final ValueChanged<bool>? onInterceptorDialogFlagChange;
+  final Widget? signupLogo;
+  final String? signupTitle;
+  final String? signupSubtitle;
+  final bool signupHasEmail;
+  final bool signupHasPhoneNumber;
+  final bool signupHasPassword;
+  final bool hasCompleteProfile;
 
   @override
   Widget build(BuildContext context) {
@@ -450,6 +570,13 @@ class LoginWithEmailAndPassword extends StatelessWidget {
       socialProviders: socialProviders,
       module: module,
       onInterceptorDialogFlagChange: onInterceptorDialogFlagChange,
+      signupLogo: signupLogo,
+      signupTitle: signupTitle,
+      signupSubtitle: signupSubtitle,
+      signupHasEmail: signupHasEmail,
+      signupHasPhoneNumber: signupHasPhoneNumber,
+      signupHasPassword: signupHasPassword,
+      hasCompleteProfile: hasCompleteProfile,
     );
   }
 }
@@ -470,6 +597,13 @@ class LoginWithPhoneAndPassword extends StatelessWidget {
     this.socialProviders,
     this.module,
     this.onInterceptorDialogFlagChange,
+    this.signupLogo,
+    this.signupTitle,
+    this.signupSubtitle,
+    this.signupHasEmail = true,
+    this.signupHasPhoneNumber = true,
+    this.signupHasPassword = true,
+    this.hasCompleteProfile = false,
   });
 
   final String langCode;
@@ -485,6 +619,13 @@ class LoginWithPhoneAndPassword extends StatelessWidget {
   final List<SocialProvider>? socialProviders;
   final AuthModule? module;
   final ValueChanged<bool>? onInterceptorDialogFlagChange;
+  final Widget? signupLogo;
+  final String? signupTitle;
+  final String? signupSubtitle;
+  final bool signupHasEmail;
+  final bool signupHasPhoneNumber;
+  final bool signupHasPassword;
+  final bool hasCompleteProfile;
 
   @override
   Widget build(BuildContext context) {
@@ -503,6 +644,13 @@ class LoginWithPhoneAndPassword extends StatelessWidget {
       socialProviders: socialProviders,
       module: module,
       onInterceptorDialogFlagChange: onInterceptorDialogFlagChange,
+      signupLogo: signupLogo,
+      signupTitle: signupTitle,
+      signupSubtitle: signupSubtitle,
+      signupHasEmail: signupHasEmail,
+      signupHasPhoneNumber: signupHasPhoneNumber,
+      signupHasPassword: signupHasPassword,
+      hasCompleteProfile: hasCompleteProfile,
     );
   }
 }
@@ -523,6 +671,13 @@ class LoginWithPhoneAndVerificationCode extends StatelessWidget {
     this.socialProviders,
     this.module,
     this.onInterceptorDialogFlagChange,
+    this.signupLogo,
+    this.signupTitle,
+    this.signupSubtitle,
+    this.signupHasEmail = true,
+    this.signupHasPhoneNumber = true,
+    this.signupHasPassword = true,
+    this.hasCompleteProfile = false,
   });
 
   final String langCode;
@@ -538,6 +693,13 @@ class LoginWithPhoneAndVerificationCode extends StatelessWidget {
   final List<SocialProvider>? socialProviders;
   final AuthModule? module;
   final ValueChanged<bool>? onInterceptorDialogFlagChange;
+  final Widget? signupLogo;
+  final String? signupTitle;
+  final String? signupSubtitle;
+  final bool signupHasEmail;
+  final bool signupHasPhoneNumber;
+  final bool signupHasPassword;
+  final bool hasCompleteProfile;
 
   @override
   Widget build(BuildContext context) {
@@ -556,6 +718,13 @@ class LoginWithPhoneAndVerificationCode extends StatelessWidget {
       socialProviders: socialProviders,
       module: module,
       onInterceptorDialogFlagChange: onInterceptorDialogFlagChange,
+      signupLogo: signupLogo,
+      signupTitle: signupTitle,
+      signupSubtitle: signupSubtitle,
+      signupHasEmail: signupHasEmail,
+      signupHasPhoneNumber: signupHasPhoneNumber,
+      signupHasPassword: signupHasPassword,
+      hasCompleteProfile: hasCompleteProfile,
     );
   }
 }
