@@ -1,6 +1,7 @@
 import 'package:auth_module/src/presentation/cubit/auth_ui_cubit.dart';
 import 'package:auth_module/src/presentation/cubit/auth_ui_state.dart';
 import 'package:auth_module/src/presentation/localization/module_localizations.dart';
+import 'package:auth_module/src/presentation/screens/complete_profile_screen.dart';
 import 'package:auth_module/src/presentation/widgets/module_button.dart';
 import 'package:auth_module/src/presentation/widgets/text_field_widget.dart';
 import 'package:flutter/material.dart';
@@ -16,6 +17,7 @@ class OtpScreen extends StatefulWidget {
     this.phoneCountry,
     this.verifyType,
     this.primaryColor,
+    this.hasCompleteProfile = false,
   });
 
   final String langCode;
@@ -25,6 +27,7 @@ class OtpScreen extends StatefulWidget {
   final String? phoneCountry;
   final String? verifyType;
   final Color? primaryColor;
+  final bool hasCompleteProfile;
 
   @override
   State<OtpScreen> createState() => _OtpScreenState();
@@ -68,11 +71,34 @@ class _OtpScreenState extends State<OtpScreen> {
       return;
     }
 
+    final fetchedUser = await cubit.fetchCurrentUser();
+    if (!mounted) {
+      return;
+    }
+
+    final user = fetchedUser ?? cubit.state.user;
+    final shouldCompleteProfile =
+        widget.hasCompleteProfile && (user?.isDefaultName ?? false);
+
+    if (shouldCompleteProfile) {
       Navigator.of(context).pushAndRemoveUntil(
-        MaterialPageRoute(builder: (_) => widget.mainAppScreen),
+        MaterialPageRoute(
+          builder: (_) => CompleteProfileScreen(
+            langCode: widget.langCode,
+            mainAppScreen: widget.mainAppScreen,
+            primaryColor: widget.primaryColor,
+          ),
+        ),
         (route) => false,
       );
       return;
+    }
+
+    Navigator.of(context).pushAndRemoveUntil(
+      MaterialPageRoute(builder: (_) => widget.mainAppScreen),
+      (route) => false,
+    );
+    return;
   }
 
   Future<void> _resend(AuthUiCubit cubit) async {
