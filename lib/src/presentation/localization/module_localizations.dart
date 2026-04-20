@@ -1,4 +1,3 @@
-
 class ModuleLocalizations {
   const ModuleLocalizations._();
 
@@ -19,7 +18,11 @@ class ModuleLocalizations {
   static const Map<String, Map<String, String>> _translations = {
     'en': {
       'sign_in': 'Sign In',
+      'sign_up': 'Sign Up',
       'login_msg': 'Login to continue your journey',
+      'signup_msg': 'Create your account to start your journey',
+      'name': 'Name',
+      'name_is_required': 'Name is required',
       'email': 'Email',
       'password': 'Password',
       'password_hint': 'Enter your password',
@@ -27,6 +30,12 @@ class ModuleLocalizations {
       'phone_number_is_required': 'Phone number is required',
       'continue': 'Continue',
       'continue_as_guest': 'Continue as Guest',
+      'dont_have_account': "Don't have an account?",
+      'already_have_account': 'Already have an account?',
+      'add_photo': 'Add Photo',
+      'submit': 'Submit',
+      'complete_profile_title': 'Complete Your Profile',
+      'complete_profile_subtitle': 'Add your details to continue',
       'or': 'OR',
       'change_number': 'Change Number',
       'fast_verification': 'Fast Verification',
@@ -43,11 +52,13 @@ class ModuleLocalizations {
       'password_is_required': 'Password is required',
       'phone_is_required': 'Phone number is required',
       'forgot_password': 'Forgot Password?',
-      'forgot_password_msg': 'Enter your account and continue with verification',
+      'forgot_password_msg':
+          'Enter your account and continue with verification',
       'reset_password': 'Reset Password',
       'reset_password_msg': 'Set a new secure password for your account',
       'reset_password_success_title': 'Success',
-      'reset_password_success_msg': 'Your password has been reset successfully.',
+      'reset_password_success_msg':
+          'Your password has been reset successfully.',
       'change_password': 'Change Password',
       'change_password_msg': 'Update your password to keep your account secure',
       'old_password': 'Old Password',
@@ -71,7 +82,11 @@ class ModuleLocalizations {
     },
     'ar': {
       'sign_in': 'تسجيل الدخول',
+      'sign_up': 'إنشاء حساب',
       'login_msg': 'سجل دخولك لمواصلة رحلتك',
+      'signup_msg': 'أنشئ حسابك لبدء رحلتك',
+      'name': 'الاسم',
+      'name_is_required': 'الاسم مطلوب',
       'email': 'البريد الالكتروني',
       'password': 'كلمة المرور',
       'password_hint': 'ادخل كلمة المرور',
@@ -79,6 +94,12 @@ class ModuleLocalizations {
       'phone_number_is_required': 'رقم الهاتف مطلوب',
       'continue': 'استمرار',
       'continue_as_guest': 'المتابعة كضيف',
+      'dont_have_account': 'ليس لديك حساب؟',
+      'already_have_account': 'لديك حساب بالفعل؟',
+      'add_photo': 'إضافة صورة',
+      'submit': 'إرسال',
+      'complete_profile_title': 'أكمل ملفك الشخصي',
+      'complete_profile_subtitle': 'أضف بياناتك للمتابعة',
       'or': 'او',
       'change_number': 'تغيير الرقم',
       'fast_verification': 'التحقق السريع',
