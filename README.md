@@ -184,6 +184,8 @@ final change = await auth.changePassword(
 ### LoginScreen with optional forgot password
 
 If `forgetType` is null, forgot-password button is hidden.
+The login screen now also shows a translated `Don't have an account? Sign Up` action and navigates to `SignUpScreen`.
+If `hasCompleteProfile` is true, signup row is hidden and post-login routing checks user profile completeness.
 
 ```dart
 LoginScreen(
@@ -191,6 +193,13 @@ LoginScreen(
 	forgetType: ForgetType.email, // null => hide forgot button
 	langCode: 'en',
 	mainAppScreen: const HomeScreen(),
+	// Sign up behavior (defaults shown)
+	signupHasEmail: true,
+	signupHasPhoneNumber: true,
+	signupHasPassword: true,
+	hasCompleteProfile: true,
+	signupTitle: 'Create account',
+	signupSubtitle: 'Let\'s get you started',
 	// Optional custom look for forgot screen
 	forgetTitle: 'Reset your password',
 	forgetSubtitle: 'We will send a verification code',
@@ -207,6 +216,62 @@ Supported forgot types:
 
 The login screen also shows a translated `Continue as Guest` action at the bottom.
 It navigates directly to `mainAppScreen` and clears the navigation stack.
+
+### CompleteProfileScreen
+
+When `hasCompleteProfile` is enabled in `LoginScreen`, after any successful login path (`email/password`, `phone/password`, `CloudWA`, or `OTP`), the module fetches current user and checks the default-name rule.
+
+If user name contains `user`, navigation goes to `CompleteProfileScreen`; otherwise it continues to `mainAppScreen`.
+
+```dart
+CompleteProfileScreen(
+	langCode: 'en',
+	mainAppScreen: const HomeScreen(),
+	title: 'Complete Your Profile',
+	subtitle: 'Add your details to continue',
+	primaryColor: Theme.of(context).colorScheme.primary,
+);
+```
+
+`CompleteProfileScreen` includes:
+- Profile image picker
+- Name (required)
+- Email (optional)
+- Phone (optional)
+- Submit action (`Submit`)
+
+### SignUpScreen
+
+`SignUpScreen` uses internal module instance automatically (no `module` parameter).
+
+Defaults:
+- `hasEmail: true`
+- `hasPhoneNumber: true`
+- `hasPassword: true`
+
+When `hasPassword` is false, password fields are hidden.
+After successful sign up, if phone is enabled and provided, it navigates to `WaitingResponseScreen` (CloudWA flow) then to `mainAppScreen` after verification.
+
+```dart
+SignUpScreen(
+	langCode: 'en',
+	mainAppScreen: const HomeScreen(),
+	hasEmail: true,
+	hasPhoneNumber: true,
+	hasPassword: true,
+	title: 'Create Account',
+	subtitle: 'Join us now',
+	primaryColor: Theme.of(context).colorScheme.primary,
+);
+```
+
+`SignUpScreen` includes:
+- Profile image picker
+- Name field
+- Optional email field
+- Optional phone field
+- Optional password + confirm password fields
+- Back-to-login action (`Already have an account? Sign In`)
 
 ### ResetPasswordScreen (forgot flow)
 
@@ -282,6 +347,16 @@ Localized for English and Arabic in `ModuleLocalizations`:
 - `confirm_new_password_is_required`
 - `passwords_not_match`
 - `continue_as_guest`
+- `sign_up`
+- `signup_msg`
+- `name`
+- `name_is_required`
+- `dont_have_account`
+- `already_have_account`
+- `add_photo`
+- `submit`
+- `complete_profile_title`
+- `complete_profile_subtitle`
 
 ### 4) Social login
 
@@ -333,15 +408,16 @@ Both methods send the token to `users/auth/firebase` by default (`AuthModuleConf
 ### Sign up
 
 You can upload an optional profile image as multipart file.
+Email/password are supported and can be omitted when your backend flow does not require them.
 
 ```dart
 import 'package:dio/dio.dart';
 
 await auth.signUp(
 	name: name,
-	email: email,
-	password: password,
-	passwordConfirmation: passwordConfirmation,
+	email: email, // optional
+	password: password, // optional
+	passwordConfirmation: passwordConfirmation, // optional
 	phoneCountry: 'SA',
 	phone: '5xxxxxxxx',
 	image: await MultipartFile.fromFile('/path/to/image.jpg'),
@@ -599,10 +675,17 @@ LoginScreen(
   phoneLabel: 'Phone Number',
   passwordLabel: 'Password',
   passwordHint: 'Enter secure password',
+	// Sign up customization
+	signupTitle: 'Create Account',
+	signupSubtitle: 'Start your journey',
+	signupHasEmail: true,
+	signupHasPhoneNumber: true,
+	signupHasPassword: true,
+	hasCompleteProfile: true,
   // Social login (pass list or null to hide)
   socialProviders: [SocialProvider.google],
   // Interceptor dialog control (for phone verification)
-  onInterceptorFlagChange: (flag){}), // Controls dialog behavior in waiting screen
+	onInterceptorDialogFlagChange: (flag) {}, // Controls dialog behavior in waiting screen
 );
 ```
 
@@ -625,6 +708,7 @@ if (result.isSuccess) {
       builder: (_) => OtpScreen(
 				langCode: 'en',
         mainAppScreen: HomeScreen(),
+				hasCompleteProfile: true,
         phone: '1001234567',
         phoneCountry: 'EG',
         primaryColor: Colors.blue,
@@ -656,7 +740,8 @@ if (result.isSuccess) {
         phone: '501234567',
         country: 'SA',
 				langCode: 'en',
-        mainAppScreen: HomeScreen(),
+				nextScreen: HomeScreen(),
+				hasCompleteProfile: true,
         primaryColor: Theme.of(context).colorScheme.primary,
       ),
     ),
@@ -666,7 +751,7 @@ if (result.isSuccess) {
 
 The screen automatically:
 - Polls `checkPhoneOtpState()` every 2 seconds
-- Navigates to `mainAppScreen` when verified
+- Navigates to `CompleteProfileScreen` (when enabled and name is default), otherwise to `nextScreen`
 - Allows resend of OTP with countdown
 
 ### Wrapper Classes
@@ -678,7 +763,8 @@ For convenience, you can use wrapper classes that set the `loginType` automatica
 LoginWithEmailAndPassword(
   langCode: 'en',
   mainAppScreen: HomeScreen(),
-  onInterceptorFlagChange: (flag){}), // Controls dialog behavior in waiting screen
+	hasCompleteProfile: true,
+	onInterceptorDialogFlagChange: (flag) {}, // Controls dialog behavior in waiting screen
   // ... other parameters
 );
 
@@ -686,7 +772,8 @@ LoginWithEmailAndPassword(
 LoginWithPhoneAndPassword(
   langCode: 'en',
   mainAppScreen: HomeScreen(),
-  onInterceptorFlagChange: (flag){}), // Controls dialog behavior in waiting screen
+	hasCompleteProfile: true,
+	onInterceptorDialogFlagChange: (flag) {}, // Controls dialog behavior in waiting screen
   // ... other parameters
 );
 
@@ -694,7 +781,8 @@ LoginWithPhoneAndPassword(
 LoginWithPhoneAndVerificationCode(
   langCode: 'en',
   mainAppScreen: HomeScreen(),
-  onInterceptorFlagChange: (flag){}), // Controls dialog behavior in waiting screen
+	hasCompleteProfile: true,
+	onInterceptorDialogFlagChange: (flag) {}, // Controls dialog behavior in waiting screen
   // ... other parameters
 );
 ```
@@ -702,7 +790,7 @@ LoginWithPhoneAndVerificationCode(
 
 ## Notes
 
-- Module is logic only (no UI/widgets).
+- Module provides logic APIs and optional ready-to-use UI widgets/screens.
 - Module accepts `DioHelper` through `AuthModule.init`.
 - Pass your notification module instance directly with `notificationModule`.
 - `init()` restores token only; call `fetchCurrentUser()` to populate `auth.user` from API.

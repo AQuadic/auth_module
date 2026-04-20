@@ -1,3 +1,12 @@
+## 0.1.2
+
+* Added `SignUpScreen` with profile image picker, translated labels, and configurable fields (`hasEmail`, `hasPhoneNumber`, `hasPassword`).
+* Added login-to-signup and signup-to-login navigation texts/flow in the presentation layer.
+* Updated signup UI flow to route to `WaitingResponseScreen` after signup when phone is enabled/provided.
+* Added `CompleteProfileScreen` and complete-profile post-login gating based on fetched user default name.
+* Added `hasCompleteProfile` flag in login screens/wrappers to hide signup row and route to complete profile when needed.
+* Updated docs to include `SignUpScreen` usage and latest login/signup customization options.
+
 ## 0.1.1
 
 * Added `ForgotPasswordScreen` with email, phone/CloudWA, and phone/OTP forgot flows.
