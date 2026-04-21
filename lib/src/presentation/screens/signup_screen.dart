@@ -166,14 +166,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
     return BlocProvider<AuthUiCubit>(
       create: (_) => AuthUiCubit(),
-      child: BlocConsumer<AuthUiCubit, AuthUiState>(
-        listener: (context, state) {
-          if (state.errorMessage != null && state.errorMessage!.isNotEmpty) {
-            ScaffoldMessenger.of(
-              context,
-            ).showSnackBar(SnackBar(content: Text(state.errorMessage!)));
-          }
-        },
+      child: BlocBuilder<AuthUiCubit, AuthUiState>(
         builder: (context, state) {
           final cubit = context.read<AuthUiCubit>();
 
