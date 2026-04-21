@@ -1,3 +1,9 @@
+## 0.1.3
+
+* Refactored `LoginScreen` to move sign-up and `Continue as Guest` actions into a persistent bottom sheet for improved layout and access.
+* Replaced `BlocConsumer` with `BlocBuilder` in `SignUpScreen` to simplify auth UI state handling.
+
+
 ## 0.1.2
 
 * Added `SignUpScreen` with profile image picker, translated labels, and configurable fields (`hasEmail`, `hasPhoneNumber`, `hasPassword`).
