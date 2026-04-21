@@ -227,6 +227,68 @@ class _LoginScreenState extends State<LoginScreen> {
 
           return Scaffold(
             backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+            bottomSheet: ColoredBox(
+              color: Theme.of(context).scaffoldBackgroundColor,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (!widget.hasCompleteProfile) ...[
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(translate('dont_have_account', widget.langCode)),
+                        TextButton(
+                          onPressed: () {
+                            Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (_) => SignUpScreen(
+                                  langCode: widget.langCode,
+                                  mainAppScreen: widget.mainAppScreen,
+                                  logo: widget.signupLogo,
+                                  title: widget.signupTitle,
+                                  subtitle: widget.signupSubtitle,
+                                  primaryColor: widget.primaryColor,
+                                  emailLabel: widget.emailLabel,
+                                  phoneLabel: widget.phoneLabel,
+                                  passwordLabel: widget.passwordLabel,
+                                  emailHint: widget.emailHint,
+                                  phoneHint: widget.phoneHint,
+                                  passwordHint: widget.passwordHint,
+                                  onInterceptorDialogFlagChange:
+                                      widget.onInterceptorDialogFlagChange,
+                                  cloudwaLogo: widget.cloudwaLogo,
+                                  hasEmail: widget.signupHasEmail,
+                                  hasPhoneNumber: widget.signupHasPhoneNumber,
+                                  hasPassword: widget.signupHasPassword,
+                                ),
+                              ),
+                            );
+                          },
+                          child: Text(
+                            translate('sign_up', widget.langCode),
+                            style: TextStyle(color: color),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                  Center(
+                    child: TextButton(
+                      onPressed: () {
+                        Navigator.of(context).pushAndRemoveUntil(
+                          MaterialPageRoute(builder: (_) => widget.mainAppScreen),
+                          (route) => false,
+                        );
+                      },
+                      child: Text(
+                        translate('continue_as_guest', widget.langCode),
+                        style: TextStyle(color: color),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
             body: SafeArea(
               child: Form(
                 key: _formKey,
@@ -434,67 +496,6 @@ class _LoginScreenState extends State<LoginScreen> {
                               .toList(),
                         ),
                       ],
-                      if (!widget.hasCompleteProfile) ...[
-                        const SizedBox(height: 8),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Text(
-                              translate('dont_have_account', widget.langCode),
-                            ),
-                            TextButton(
-                              onPressed: () {
-                                Navigator.of(context).push(
-                                  MaterialPageRoute(
-                                    builder: (_) => SignUpScreen(
-                                      langCode: widget.langCode,
-                                      mainAppScreen: widget.mainAppScreen,
-                                      logo: widget.signupLogo,
-                                      title: widget.signupTitle,
-                                      subtitle: widget.signupSubtitle,
-                                      primaryColor: widget.primaryColor,
-                                      emailLabel: widget.emailLabel,
-                                      phoneLabel: widget.phoneLabel,
-                                      passwordLabel: widget.passwordLabel,
-                                      emailHint: widget.emailHint,
-                                      phoneHint: widget.phoneHint,
-                                      passwordHint: widget.passwordHint,
-                                      onInterceptorDialogFlagChange:
-                                          widget.onInterceptorDialogFlagChange,
-                                      cloudwaLogo: widget.cloudwaLogo,
-                                      hasEmail: widget.signupHasEmail,
-                                      hasPhoneNumber:
-                                          widget.signupHasPhoneNumber,
-                                      hasPassword: widget.signupHasPassword,
-                                    ),
-                                  ),
-                                );
-                              },
-                              child: Text(
-                                translate('sign_up', widget.langCode),
-                                style: TextStyle(color: color),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                      const SizedBox(height: 20),
-                      Center(
-                        child: TextButton(
-                          onPressed: () {
-                            Navigator.of(context).pushAndRemoveUntil(
-                              MaterialPageRoute(
-                                builder: (_) => widget.mainAppScreen,
-                              ),
-                              (route) => false,
-                            );
-                          },
-                          child: Text(
-                            translate('continue_as_guest', widget.langCode),
-                            style: TextStyle(color: color),
-                          ),
-                        ),
-                      ),
                     ],
                   ),
                 ),
