@@ -5,6 +5,7 @@ export 'src/presentation/cubit/auth_ui_cubit.dart';
 export 'src/presentation/cubit/auth_ui_state.dart';
 export 'src/presentation/localization/module_localizations.dart';
 export 'src/presentation/screens/change_password_screen.dart';
+export 'src/presentation/screens/edit_profile_screen.dart';
 export 'src/presentation/screens/complete_profile_screen.dart';
 export 'src/presentation/screens/forgot_password_screen.dart';
 export 'src/presentation/screens/login_screen.dart';
