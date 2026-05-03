@@ -1,3 +1,9 @@
+## 0.1.4
+
+* Added `EditProfileScreen` for editing profile image, name, email, phone, and gender.
+* Added `ImagePicker` support for gallery/camera selection with responsive image preview.
+* Added localization keys for edit-profile labels, actions, and save feedback.
+
 ## 0.1.3
 
 * Refactored `LoginScreen` to move sign-up and `Continue as Guest` actions into a persistent bottom sheet for improved layout and access.
