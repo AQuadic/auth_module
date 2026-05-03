@@ -240,6 +240,37 @@ CompleteProfileScreen(
 - Phone (optional)
 - Submit action (`Submit`)
 
+### EditProfileScreen
+
+`EditProfileScreen` is for editing the current signed-in user profile.
+It initializes its form from `AuthModule.instance.user` and saves changes with `updateUser()`.
+
+Includes:
+- Profile image picker using `ImagePicker`
+- Responsive image preview from the user image model
+- Name field
+- Email field
+- Phone field with country selector
+- Gender selection (`Male` / `Female`)
+- Save action
+
+```dart
+EditProfileScreen(
+	langCode: 'en',
+	primaryColor: Theme.of(context).colorScheme.primary,
+)
+```
+
+Localized strings used by this screen:
+- `edit_profile`
+- `choose_from_gallery`
+- `take_photo`
+- `gender`
+- `male`
+- `female`
+- `profile_updated`
+- `profile_update_failed`
+
 ### SignUpScreen
 
 `SignUpScreen` uses internal module instance automatically (no `module` parameter).
