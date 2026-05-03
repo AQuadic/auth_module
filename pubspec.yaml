@@ -27,6 +27,7 @@ dependencies:
   url_launcher: ^6.3.2
   libphonenumber_plugin: ^0.3.3
   image_picker: ^1.2.0
+  cached_network_image: ^3.4.1
 
 
 
