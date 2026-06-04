@@ -35,6 +35,7 @@ class LoginScreen extends StatefulWidget {
     this.signupHasPhoneNumber = true,
     this.signupHasPassword = true,
     this.hasCompleteProfile = false,
+    this.signupShowProfilePicture = true,
   });
 
   final LoginType loginType;
@@ -66,6 +67,7 @@ class LoginScreen extends StatefulWidget {
   final bool signupHasPhoneNumber;
   final bool signupHasPassword;
   final bool hasCompleteProfile;
+  final bool signupShowProfilePicture;
 
   @override
   State<LoginScreen> createState() => _LoginScreenState();
@@ -260,6 +262,10 @@ class _LoginScreenState extends State<LoginScreen> {
                                   hasEmail: widget.signupHasEmail,
                                   hasPhoneNumber: widget.signupHasPhoneNumber,
                                   hasPassword: widget.signupHasPassword,
+                                  showProfilePicture: widget.signupShowProfilePicture,
+                                  socialProviders: widget.socialProviders,
+                                  module: widget.module,
+                                  hasCompleteProfile: widget.hasCompleteProfile,
                                 ),
                               ),
                             );
@@ -328,7 +334,48 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                         ),
                       ],
-                      const SizedBox(height: 28),
+                      if (socialProviders != null &&
+                          socialProviders.isNotEmpty) ...[
+                        const SizedBox(height: 24),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: socialProviders
+                              .map(
+                                (provider) => Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 12,
+                                  ),
+                                  child: _SocialIconButton(
+                                    provider: provider,
+                                    color: color,
+                                    onTap: state.isLoading
+                                        ? null
+                                        : () => cubit.loginWithSocial(provider),
+                                  ),
+                                ),
+                              )
+                              .toList(),
+                        ),
+                        const SizedBox(height: 24),
+                        Row(
+                          children: [
+                            const Expanded(child: Divider()),
+                            Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                              ),
+                              child: Text(
+                                translate('or', widget.langCode),
+                                style: TextStyle(color: Colors.grey.shade700),
+                              ),
+                            ),
+                            const Expanded(child: Divider()),
+                          ],
+                        ),
+                        const SizedBox(height: 24),
+                      ] else ...[
+                        const SizedBox(height: 28),
+                      ],
                       if (widget.loginType == LoginType.emailAndPassword)
                         ModuleTextField(
                           onSaved: (_) {},
@@ -437,6 +484,8 @@ class _LoginScreenState extends State<LoginScreen> {
                                           widget.signupHasPassword,
                                       hasCompleteProfile:
                                           widget.hasCompleteProfile,
+                                      signupShowProfilePicture:
+                                          widget.signupShowProfilePicture,
                                     ),
                                     logo: widget.forgetLogo,
                                     title: widget.forgetTitle,
@@ -457,45 +506,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                         ),
                       ],
-                      if (socialProviders != null &&
-                          socialProviders.isNotEmpty) ...[
-                        const SizedBox(height: 24),
-                        Row(
-                          children: [
-                            const Expanded(child: Divider()),
-                            Padding(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 12,
-                              ),
-                              child: Text(
-                                translate('or', widget.langCode),
-                                style: TextStyle(color: Colors.grey.shade700),
-                              ),
-                            ),
-                            const Expanded(child: Divider()),
-                          ],
-                        ),
-                        const SizedBox(height: 24),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: socialProviders
-                              .map(
-                                (provider) => Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 12,
-                                  ),
-                                  child: _SocialIconButton(
-                                    provider: provider,
-                                    color: color,
-                                    onTap: state.isLoading
-                                        ? null
-                                        : () => cubit.loginWithSocial(provider),
-                                  ),
-                                ),
-                              )
-                              .toList(),
-                        ),
-                      ],
+
                     ],
                   ),
                 ),
@@ -531,6 +542,7 @@ class LoginWithEmailAndPassword extends StatelessWidget {
     this.signupHasPhoneNumber = true,
     this.signupHasPassword = true,
     this.hasCompleteProfile = false,
+    this.signupShowProfilePicture = true,
   });
 
   final String langCode;
@@ -553,6 +565,7 @@ class LoginWithEmailAndPassword extends StatelessWidget {
   final bool signupHasPhoneNumber;
   final bool signupHasPassword;
   final bool hasCompleteProfile;
+  final bool signupShowProfilePicture;
 
   @override
   Widget build(BuildContext context) {
@@ -578,6 +591,7 @@ class LoginWithEmailAndPassword extends StatelessWidget {
       signupHasPhoneNumber: signupHasPhoneNumber,
       signupHasPassword: signupHasPassword,
       hasCompleteProfile: hasCompleteProfile,
+      signupShowProfilePicture: signupShowProfilePicture,
     );
   }
 }
@@ -605,6 +619,7 @@ class LoginWithPhoneAndPassword extends StatelessWidget {
     this.signupHasPhoneNumber = true,
     this.signupHasPassword = true,
     this.hasCompleteProfile = false,
+    this.signupShowProfilePicture = true,
   });
 
   final String langCode;
@@ -627,6 +642,7 @@ class LoginWithPhoneAndPassword extends StatelessWidget {
   final bool signupHasPhoneNumber;
   final bool signupHasPassword;
   final bool hasCompleteProfile;
+  final bool signupShowProfilePicture;
 
   @override
   Widget build(BuildContext context) {
@@ -652,6 +668,7 @@ class LoginWithPhoneAndPassword extends StatelessWidget {
       signupHasPhoneNumber: signupHasPhoneNumber,
       signupHasPassword: signupHasPassword,
       hasCompleteProfile: hasCompleteProfile,
+      signupShowProfilePicture: signupShowProfilePicture,
     );
   }
 }
@@ -679,6 +696,7 @@ class LoginWithPhoneAndVerificationCode extends StatelessWidget {
     this.signupHasPhoneNumber = true,
     this.signupHasPassword = true,
     this.hasCompleteProfile = false,
+    this.signupShowProfilePicture = true,
   });
 
   final String langCode;
@@ -701,6 +719,7 @@ class LoginWithPhoneAndVerificationCode extends StatelessWidget {
   final bool signupHasPhoneNumber;
   final bool signupHasPassword;
   final bool hasCompleteProfile;
+  final bool signupShowProfilePicture;
 
   @override
   Widget build(BuildContext context) {
@@ -726,6 +745,7 @@ class LoginWithPhoneAndVerificationCode extends StatelessWidget {
       signupHasPhoneNumber: signupHasPhoneNumber,
       signupHasPassword: signupHasPassword,
       hasCompleteProfile: hasCompleteProfile,
+      signupShowProfilePicture: signupShowProfilePicture,
     );
   }
 }

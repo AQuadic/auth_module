@@ -29,6 +29,10 @@ class SignUpScreen extends StatefulWidget {
     this.hasEmail = true,
     this.hasPhoneNumber = true,
     this.hasPassword = true,
+    this.showProfilePicture = true,
+    this.socialProviders,
+    this.module,
+    this.hasCompleteProfile = false,
   });
 
   final String langCode;
@@ -51,6 +55,10 @@ class SignUpScreen extends StatefulWidget {
   final bool hasEmail;
   final bool hasPhoneNumber;
   final bool hasPassword;
+  final bool showProfilePicture;
+  final List<SocialProvider>? socialProviders;
+  final AuthModule? module;
+  final bool hasCompleteProfile;
 
   @override
   State<SignUpScreen> createState() => _SignUpScreenState();
@@ -67,8 +75,47 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
   final ImagePicker _picker = ImagePicker();
   XFile? _selectedImage;
+  bool _isHandlingPostLoginRoute = false;
 
   String tr(String key) => ModuleLocalizations.tr(widget.langCode, key);
+
+  Future<void> _handlePostLoginRoute(AuthUiCubit cubit) async {
+    if (_isHandlingPostLoginRoute || !mounted) {
+      return;
+    }
+    _isHandlingPostLoginRoute = true;
+
+    final fetchedUser = await cubit.fetchCurrentUser();
+    if (!mounted) {
+      _isHandlingPostLoginRoute = false;
+      return;
+    }
+
+    final user = fetchedUser ?? cubit.state.user;
+    final shouldCompleteProfile =
+        widget.hasCompleteProfile && (user?.isDefaultName ?? false);
+
+    if (shouldCompleteProfile) {
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(
+          builder: (_) => CompleteProfileScreen(
+            langCode: widget.langCode,
+            mainAppScreen: widget.mainAppScreen,
+            primaryColor: widget.primaryColor,
+          ),
+        ),
+        (route) => false,
+      );
+      _isHandlingPostLoginRoute = false;
+      return;
+    }
+
+    Navigator.of(context).pushAndRemoveUntil(
+      MaterialPageRoute(builder: (_) => widget.mainAppScreen),
+      (route) => false,
+    );
+    _isHandlingPostLoginRoute = false;
+  }
 
   @override
   void dispose() {
@@ -165,8 +212,13 @@ class _SignUpScreenState extends State<SignUpScreen> {
     final color = widget.primaryColor ?? Theme.of(context).colorScheme.primary;
 
     return BlocProvider<AuthUiCubit>(
-      create: (_) => AuthUiCubit(),
-      child: BlocBuilder<AuthUiCubit, AuthUiState>(
+      create: (_) => AuthUiCubit(module: widget.module),
+      child: BlocConsumer<AuthUiCubit, AuthUiState>(
+        listener: (context, state) {
+          if (state.user != null) {
+            _handlePostLoginRoute(context.read<AuthUiCubit>());
+          }
+        },
         builder: (context, state) {
           final cubit = context.read<AuthUiCubit>();
 
@@ -181,35 +233,38 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       const SizedBox(height: 16),
-                      Center(
-                        child: GestureDetector(
-                          onTap: _pickImage,
-                          child: Column(
-                            children: [
-                              widget.logo ??
-                                  CircleAvatar(
-                                    radius: 44,
-                                    backgroundColor: color.withOpacity(0.12),
-                                    backgroundImage: _selectedImage != null
-                                        ? FileImage(File(_selectedImage!.path))
-                                        : null,
-                                    child: _selectedImage == null
-                                        ? Icon(
-                                            CupertinoIcons.camera,
-                                            size: 34,
-                                            color: color,
-                                          )
-                                        : null,
-                                  ),
-                              const SizedBox(height: 8),
-                              Text(
-                                tr('add_photo'),
-                                style: TextStyle(color: color),
-                              ),
-                            ],
+                      if (widget.showProfilePicture)
+                        Center(
+                          child: GestureDetector(
+                            onTap: _pickImage,
+                            child: Column(
+                              children: [
+                                widget.logo ??
+                                    CircleAvatar(
+                                      radius: 44,
+                                      backgroundColor: color.withOpacity(0.12),
+                                      backgroundImage: _selectedImage != null
+                                          ? FileImage(File(_selectedImage!.path))
+                                          : null,
+                                      child: _selectedImage == null
+                                          ? Icon(
+                                              CupertinoIcons.camera,
+                                              size: 34,
+                                              color: color,
+                                            )
+                                          : null,
+                                    ),
+                                const SizedBox(height: 8),
+                                Text(
+                                  tr('add_photo'),
+                                  style: TextStyle(color: color),
+                                ),
+                              ],
+                            ),
                           ),
-                        ),
-                      ),
+                        )
+                      else if (widget.logo != null)
+                        Center(child: widget.logo),
                       const SizedBox(height: 20),
                       Text(
                         widget.title ?? tr('sign_up'),
@@ -230,7 +285,48 @@ class _SignUpScreenState extends State<SignUpScreen> {
                           ),
                         ),
                       ],
-                      const SizedBox(height: 28),
+                      if (widget.socialProviders != null &&
+                          widget.socialProviders!.isNotEmpty) ...[
+                        const SizedBox(height: 24),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: widget.socialProviders!
+                              .map(
+                                (provider) => Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 12,
+                                  ),
+                                  child: _SocialIconButton(
+                                    provider: provider,
+                                    color: color,
+                                    onTap: state.isLoading
+                                        ? null
+                                        : () => cubit.loginWithSocial(provider),
+                                  ),
+                                ),
+                              )
+                              .toList(),
+                        ),
+                        const SizedBox(height: 24),
+                        Row(
+                          children: [
+                            const Expanded(child: Divider()),
+                            Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                              ),
+                              child: Text(
+                                tr('or'),
+                                style: TextStyle(color: Colors.grey.shade700),
+                              ),
+                            ),
+                            const Expanded(child: Divider()),
+                          ],
+                        ),
+                        const SizedBox(height: 24),
+                      ] else ...[
+                        const SizedBox(height: 28),
+                      ],
                       ModuleTextField(
                         onSaved: (_) {},
                         fromAuth: true,
@@ -347,5 +443,36 @@ class _SignUpScreenState extends State<SignUpScreen> {
         },
       ),
     );
+  }
+}
+
+class _SocialIconButton extends StatelessWidget {
+  const _SocialIconButton({
+    required this.provider,
+    required this.color,
+    required this.onTap,
+  });
+
+  final SocialProvider provider;
+  final Color color;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final icon = _iconFor(provider);
+    return InkWell(
+      onTap: onTap,
+      customBorder: const CircleBorder(),
+      child: Image.asset(icon, package: 'auth_module', width: 42, height: 42),
+    );
+  }
+
+  String _iconFor(SocialProvider provider) {
+    switch (provider) {
+      case SocialProvider.apple:
+        return 'assets/images/apple.png';
+      case SocialProvider.google:
+        return 'assets/images/google.png';
+    }
   }
 }
