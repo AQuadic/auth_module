@@ -114,7 +114,7 @@ class ModuleTextField extends StatelessWidget {
                         fontWeight: FontWeight.w600,
                       ),
                 ),
-                if (titleAction != null) titleAction!,
+                ?titleAction,
               ],
             ),
           ),

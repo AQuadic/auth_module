@@ -3,7 +3,6 @@ import 'dart:io';
 import 'package:aq_tools/aq_tools.dart';
 import 'package:auth_module/src/core/auth_module_service.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:cross_file/cross_file.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 

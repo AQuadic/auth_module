@@ -262,7 +262,8 @@ class _LoginScreenState extends State<LoginScreen> {
                                   hasEmail: widget.signupHasEmail,
                                   hasPhoneNumber: widget.signupHasPhoneNumber,
                                   hasPassword: widget.signupHasPassword,
-                                  showProfilePicture: widget.signupShowProfilePicture,
+                                  showProfilePicture:
+                                      widget.signupShowProfilePicture,
                                   socialProviders: widget.socialProviders,
                                   module: widget.module,
                                   hasCompleteProfile: widget.hasCompleteProfile,
@@ -271,7 +272,8 @@ class _LoginScreenState extends State<LoginScreen> {
                             );
                           },
                           child: Text(
-                            translate('sign_up', widget.langCode),
+                            widget.signupTitle ??
+                                translate('sign_up', widget.langCode),
                             style: TextStyle(color: color),
                           ),
                         ),
@@ -282,7 +284,9 @@ class _LoginScreenState extends State<LoginScreen> {
                     child: TextButton(
                       onPressed: () {
                         Navigator.of(context).pushAndRemoveUntil(
-                          MaterialPageRoute(builder: (_) => widget.mainAppScreen),
+                          MaterialPageRoute(
+                            builder: (_) => widget.mainAppScreen,
+                          ),
                           (route) => false,
                         );
                       },
@@ -336,7 +340,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       ],
                       if (socialProviders != null &&
                           socialProviders.isNotEmpty) ...[
-                        const SizedBox(height: 24),
+                        const SizedBox(height: 48),
                         Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: socialProviders
@@ -442,15 +446,8 @@ class _LoginScreenState extends State<LoginScreen> {
                             return null;
                           },
                         ),
-                      const SizedBox(height: 22),
-                      ModuleButton(
-                        onTap: state.isLoading ? null : () => _submit(cubit),
-                        title: translate('sign_in', widget.langCode),
-                        color: color,
-                        isLoading: state.isLoading,
-                      ),
                       if (widget.forgetType != null) ...[
-                        const SizedBox(height: 8),
+                        const SizedBox(height: 12),
                         Align(
                           alignment: Alignment.centerRight,
                           child: TextButton(
@@ -506,7 +503,13 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                         ),
                       ],
-
+                      const SizedBox(height: 24),
+                      ModuleButton(
+                        onTap: state.isLoading ? null : () => _submit(cubit),
+                        title: translate('sign_in', widget.langCode),
+                        color: color,
+                        isLoading: state.isLoading,
+                      ),
                     ],
                   ),
                 ),
@@ -767,7 +770,7 @@ class _SocialIconButton extends StatelessWidget {
     return InkWell(
       onTap: onTap,
       customBorder: const CircleBorder(),
-      child: Image.asset(icon, package: 'auth_module', width: 42, height: 42),
+      child: Image.asset(icon, package: 'auth_module', width: 32, height: 32),
     );
   }
 

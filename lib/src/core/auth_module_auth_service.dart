@@ -304,7 +304,7 @@ class _AuthAuthService {
         if (phoneCountry != null && phoneCountry.isNotEmpty)
           'phone_country': phoneCountry,
         if (countryId != null) 'country_id': countryId.toString(),
-        if (image != null) 'image': image,
+        'image': ?image,
       }),
     );
 
