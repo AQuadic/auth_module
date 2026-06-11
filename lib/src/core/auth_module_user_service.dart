@@ -267,9 +267,7 @@ class _AuthUserService {
     try {
       await _module.notificationModule.setToken(currentToken);
       await _module.notificationModule.addDevice(enabled: enabled);
-      if (enabled != null) {
-        _module._isNotificationEnabled = enabled;
-      }
+      _module._isNotificationEnabled = enabled ?? true;
       return AuthResult.success();
     } catch (e) {
       return AuthResult.failure(e.toString());
