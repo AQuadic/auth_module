@@ -246,13 +246,12 @@ class _AuthUserService {
     final userJson = data[_module.config.userResponseKey];
     if (userJson is Map<String, dynamic>) {
       _module._user = UserModel.fromJson(userJson);
-      return AuthResult.success(
-        data: _module._user,
-        message: data[_module.config.messageResponseKey]?.toString(),
-      );
+    } else {
+      _module._user = UserModel.fromJson(data);
     }
 
-    _module._user = UserModel.fromJson(data);
+    await addDevice();
+
     return AuthResult.success(
       data: _module._user,
       message: data[_module.config.messageResponseKey]?.toString(),
