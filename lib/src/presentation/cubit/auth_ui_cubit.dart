@@ -485,6 +485,12 @@ class AuthUiCubit extends Cubit<AuthUiState> {
   }
 
   @override
+  void emit(AuthUiState state) {
+    if (isClosed) return;
+    super.emit(state);
+  }
+
+  @override
   Future<void> close() {
     _waitingTimer?.cancel();
     _countdownTimer?.cancel();
