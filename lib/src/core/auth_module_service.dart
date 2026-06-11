@@ -107,6 +107,9 @@ class AuthModule {
     }
 
     _token = await _getToken();
+    if (_token != null && _token!.isNotEmpty) {
+      await fetchCurrentUser();
+    }
   }
 
   void _configure({

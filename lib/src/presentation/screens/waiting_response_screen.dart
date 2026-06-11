@@ -77,12 +77,7 @@ class _WaitingResponseScreenState extends State<WaitingResponseScreen> {
   }
 
   Future<void> _handleVerifiedRoute() async {
-    final fetchedUser = await _cubit.fetchCurrentUser();
-    if (!mounted) {
-      return;
-    }
-
-    final user = fetchedUser ?? _cubit.state.user;
+    final user = _cubit.state.user;
     final shouldCompleteProfile =
         widget.hasCompleteProfile && (user?.isDefaultName ?? false);
 

@@ -98,10 +98,7 @@ void main() {
       };
 
       socialSignInClient.result = const SocialSignInResult.success(
-        SocialSignInCredentials(
-          provider: 'apple',
-          accessToken: 'apple-access',
-        ),
+        SocialSignInCredentials(provider: 'apple', accessToken: 'apple-access'),
       );
 
       final result = await module.loginWithSocial(
@@ -146,9 +143,28 @@ void main() {
   });
 
   test(
-    'init restores token but not logged-in state until user fetched',
+    'init restores token and fetches user if token is not null and succeeds',
     () async {
       await tokenStorage.saveToken('saved-token');
+      networkClient.postResponse = {
+        'id': 5,
+        'name': 'John',
+        'email': 'john@john.com',
+      };
+
+      await module.init();
+
+      expect(module.token, 'saved-token');
+      expect(module.isLoggedIn, isTrue);
+      expect(module.user?.name, 'John');
+    },
+  );
+
+  test(
+    'init restores token but logged-in state is false if fetch fails',
+    () async {
+      await tokenStorage.saveToken('saved-token');
+      networkClient.postResponse = 'Unauthorized';
 
       await module.init();
 
@@ -166,9 +182,7 @@ void main() {
     };
 
     await module.init();
-    final result = await module.fetchCurrentUser();
 
-    expect(result.isSuccess, isTrue);
     expect(module.token, 'valid-token');
     expect(module.user?.name, 'Sara');
     expect(module.isLoggedIn, isTrue);
@@ -199,34 +213,37 @@ void main() {
     expect(await tokenStorage.getToken(), isNull);
   });
 
-  test('logout clears local auth state and calls logout endpoint by default', () async {
-    networkClient.postResponse = {
-      'token': 'abc123',
-      'user': {'id': 1, 'name': 'Ahmed', 'email': 'a@a.com'},
-      'message': 'ok',
-    };
+  test(
+    'logout clears local auth state and calls logout endpoint by default',
+    () async {
+      networkClient.postResponse = {
+        'token': 'abc123',
+        'user': {'id': 1, 'name': 'Ahmed', 'email': 'a@a.com'},
+        'message': 'ok',
+      };
 
-    final loginResult = await module.loginWithEmail(
-      email: 'a@a.com',
-      password: 'secret',
-    );
-    expect(loginResult.isSuccess, isTrue);
+      final loginResult = await module.loginWithEmail(
+        email: 'a@a.com',
+        password: 'secret',
+      );
+      expect(loginResult.isSuccess, isTrue);
 
-    networkClient.postResponse = {'message': 'logged out'};
+      networkClient.postResponse = {'message': 'logged out'};
 
-    final logoutResult = await module.logout();
+      final logoutResult = await module.logout();
 
-    expect(logoutResult.isSuccess, isTrue);
-    expect(networkClient.lastPostEndpoint, 'user/logout');
-    expect(module.token, isNull);
-    expect(module.tempToken, isNull);
-    expect(module.user, isNull);
-    expect(module.otpResponse, isNull);
-    expect(module.isLoggedIn, isFalse);
-    expect(await tokenStorage.getToken(), isNull);
-    expect(notificationModule.token, isNull);
-    expect(notificationModule.deleteTokenCalled, isTrue);
-  });
+      expect(logoutResult.isSuccess, isTrue);
+      expect(networkClient.lastPostEndpoint, 'user/logout');
+      expect(module.token, isNull);
+      expect(module.tempToken, isNull);
+      expect(module.user, isNull);
+      expect(module.otpResponse, isNull);
+      expect(module.isLoggedIn, isFalse);
+      expect(await tokenStorage.getToken(), isNull);
+      expect(notificationModule.token, isNull);
+      expect(notificationModule.deleteTokenCalled, isTrue);
+    },
+  );
 
   test('forgotPassword stores temp token and otp reference', () async {
     networkClient.postResponse = {
@@ -243,7 +260,10 @@ void main() {
     expect(result.isSuccess, isTrue);
     expect(module.tempToken, 'temp-forgot-token');
     expect(module.otpResponse?.reference, 'forgot-ref-1');
-    expect(networkClient.lastPostEndpoint, module.config.forgetPasswordEndpoint);
+    expect(
+      networkClient.lastPostEndpoint,
+      module.config.forgetPasswordEndpoint,
+    );
     expect(networkClient.lastPostBody?['phone_country'], 'EG');
     expect(networkClient.lastPostBody?['phone'], '01000000000');
     expect(networkClient.lastPostBody?['reset_type'], 'whatsapp_send');
@@ -261,7 +281,10 @@ void main() {
     );
 
     expect(result.isSuccess, isTrue);
-    expect(networkClient.lastPostEndpoint, module.config.forgetPasswordEndpoint);
+    expect(
+      networkClient.lastPostEndpoint,
+      module.config.forgetPasswordEndpoint,
+    );
     expect(networkClient.lastPostBody?['phone'], '01000000000');
     expect(networkClient.lastPostBody?['phone_country'], 'EG');
     expect(networkClient.lastPostBody?['reset_token'], 'explicit-reset-token');
@@ -307,7 +330,10 @@ void main() {
     );
 
     expect(resetResult.isSuccess, isTrue);
-    expect(networkClient.lastPostEndpoint, module.config.forgetPasswordEndpoint);
+    expect(
+      networkClient.lastPostEndpoint,
+      module.config.forgetPasswordEndpoint,
+    );
     expect(networkClient.lastPostBody?['reset_token'], 'stored-reset-token');
   });
 
@@ -342,7 +368,6 @@ void main() {
     expect(result.isSuccess, isFalse);
     expect(result.error, 'Not authenticated.');
   });
-
 }
 
 class _FakeNotificationModule {

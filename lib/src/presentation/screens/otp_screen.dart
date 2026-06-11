@@ -71,12 +71,7 @@ class _OtpScreenState extends State<OtpScreen> {
       return;
     }
 
-    final fetchedUser = await cubit.fetchCurrentUser();
-    if (!mounted) {
-      return;
-    }
-
-    final user = fetchedUser ?? cubit.state.user;
+    final user = cubit.state.user;
     final shouldCompleteProfile =
         widget.hasCompleteProfile && (user?.isDefaultName ?? false);
 

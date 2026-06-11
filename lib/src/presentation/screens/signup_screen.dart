@@ -85,13 +85,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
     }
     _isHandlingPostLoginRoute = true;
 
-    final fetchedUser = await cubit.fetchCurrentUser();
-    if (!mounted) {
-      _isHandlingPostLoginRoute = false;
-      return;
-    }
-
-    final user = fetchedUser ?? cubit.state.user;
+    final user = cubit.state.user;
     final shouldCompleteProfile =
         widget.hasCompleteProfile && (user?.isDefaultName ?? false);
 
@@ -244,7 +238,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
                                       radius: 44,
                                       backgroundColor: color.withOpacity(0.12),
                                       backgroundImage: _selectedImage != null
-                                          ? FileImage(File(_selectedImage!.path))
+                                          ? FileImage(
+                                              File(_selectedImage!.path),
+                                            )
                                           : null,
                                       child: _selectedImage == null
                                           ? Icon(

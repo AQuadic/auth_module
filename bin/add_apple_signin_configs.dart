@@ -4,7 +4,7 @@ const _activityName =
     'com.aboutyou.dart_packages.sign_in_with_apple.SignInWithAppleCallback';
 const _appleSignInEntitlementKey = 'com.apple.developer.applesignin';
 const _codeSignEntitlementsSetting =
-  'CODE_SIGN_ENTITLEMENTS = Runner/Runner.entitlements;';
+    'CODE_SIGN_ENTITLEMENTS = Runner/Runner.entitlements;';
 
 enum _EntitlementUpsertResult { updated, alreadyPresent, failed }
 
@@ -23,7 +23,8 @@ const _callbackActivity = '''        <activity
         </activity>
 ''';
 
-const _appleSignInEntitlementBlock = '''	<key>com.apple.developer.applesignin</key>
+const _appleSignInEntitlementBlock =
+    '''	<key>com.apple.developer.applesignin</key>
 	<array>
 		<string>Default</string>
 	</array>
@@ -57,7 +58,10 @@ void main(List<String> args) {
 }
 
 bool _configureAndroidManifest(String inputPath) {
-  final manifestPath = _resolveProjectPath(inputPath, platformFolder: 'android');
+  final manifestPath = _resolveProjectPath(
+    inputPath,
+    platformFolder: 'android',
+  );
   final manifestFile = File(manifestPath);
 
   if (!manifestFile.existsSync()) {
@@ -95,19 +99,26 @@ bool _configureAndroidManifest(String inputPath) {
 }
 
 bool _configureIosEntitlements(String inputPath) {
-  final entitlementsPath = _resolveProjectPath(inputPath, platformFolder: 'ios');
+  final entitlementsPath = _resolveProjectPath(
+    inputPath,
+    platformFolder: 'ios',
+  );
   final entitlementsFile = File(entitlementsPath);
 
   if (!entitlementsFile.existsSync()) {
     entitlementsFile.parent.createSync(recursive: true);
     entitlementsFile.writeAsStringSync(_newEntitlementsFile);
-    stdout.writeln('Created Runner.entitlements with Apple Sign-In key at: $entitlementsPath');
+    stdout.writeln(
+      'Created Runner.entitlements with Apple Sign-In key at: $entitlementsPath',
+    );
     return _ensureEntitlementsAssignedInXcodeProject();
   }
 
   final raw = entitlementsFile.readAsStringSync();
   if (raw.contains(_appleSignInEntitlementKey)) {
-    stdout.writeln('Apple Sign-In entitlement already exists in Runner.entitlements. No changes made.');
+    stdout.writeln(
+      'Apple Sign-In entitlement already exists in Runner.entitlements. No changes made.',
+    );
     return _ensureEntitlementsAssignedInXcodeProject();
   }
 
@@ -176,7 +187,9 @@ bool _ensureEntitlementsAssignedInXcodeProject() {
   for (final entry in runnerConfigIds.entries) {
     final configId = entry.key;
     final configName = entry.value;
-    if (configName != 'Debug' && configName != 'Release' && configName != 'Profile') {
+    if (configName != 'Debug' &&
+        configName != 'Release' &&
+        configName != 'Profile') {
       continue;
     }
 
@@ -265,7 +278,9 @@ String? _findRunnerBuildConfigurationListId(List<String> lines) {
       }
 
       if (trimmed.startsWith('buildConfigurationList = ')) {
-        final match = RegExp(r'buildConfigurationList = ([A-Fa-f0-9]+) ').firstMatch(trimmed);
+        final match = RegExp(
+          r'buildConfigurationList = ([A-Fa-f0-9]+) ',
+        ).firstMatch(trimmed);
         if (match != null) {
           configListId = match.group(1);
         }
@@ -313,7 +328,9 @@ Map<String, String> _findConfigIdsForConfigurationList(
         continue;
       }
 
-      final match = RegExp(r'^([A-Fa-f0-9]+) /\* (.+) \*/,$').firstMatch(trimmed);
+      final match = RegExp(
+        r'^([A-Fa-f0-9]+) /\* (.+) \*/,$',
+      ).firstMatch(trimmed);
       if (match == null) {
         continue;
       }

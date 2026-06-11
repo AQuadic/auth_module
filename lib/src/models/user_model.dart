@@ -79,7 +79,7 @@ class UserModel {
     this.createdAt,
     this.updatedAt,
     this.birthday,
-    this.gender
+    this.gender,
   });
 
   factory UserModel.fromJson(

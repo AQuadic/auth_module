@@ -12,7 +12,7 @@ import 'auth_ui_state.dart';
 class AuthUiCubit extends Cubit<AuthUiState> {
   AuthUiCubit({AuthModule? module})
     : _module = module ?? AuthModule.instance,
-      super(const AuthUiState());
+      super(AuthUiState(user: (module ?? AuthModule.instance).user));
 
   final AuthModule _module;
   Timer? _waitingTimer;

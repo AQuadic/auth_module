@@ -25,9 +25,8 @@ class AuthModuleConfig {
   static const String _userCheckStateOfAccountEndPoint = 'user/otp/check';
   static const String _userDeleteAccountEndPoint = 'user/destroy';
   static const String _userForgetPasswordEndPoint = 'user/forgot';
-    static const String _userChangeCurrentPasswordEndPoint =
+  static const String _userChangeCurrentPasswordEndPoint =
       'user/change_password';
-
 
   static const String _adminUserEndPoint = 'admin/getCurrentAdmin';
   static const String _adminLoginEndPoint = 'admin/login';
@@ -52,7 +51,7 @@ class AuthModuleConfig {
   static const String _messageResponseKey = 'message';
   static const String _otpCallbackResponseKey = 'otp_callback';
   static const String _otpReferenceKey = 'reference';
-    static const String _defaultFirebaseAuthEndpoint = 'users/auth/firebase';
+  static const String _defaultFirebaseAuthEndpoint = 'users/auth/firebase';
 
   String get userEndpoint => isAdmin ? _adminUserEndPoint : _userUserEndPoint;
   String get loginEndpoint =>
@@ -76,9 +75,11 @@ class AuthModuleConfig {
       : _userCheckStateOfAccountEndPoint;
   String get deleteAccountEndpoint =>
       isAdmin ? _adminDeleteAccountEndPoint : _userDeleteAccountEndPoint;
-  String get forgetPasswordEndpoint => isAdmin ? _adminForgetPasswordEndPoint : _userForgetPasswordEndPoint;
-  String get changeCurrentPasswordEndpoint =>
-      isAdmin ? _adminChangeCurrentPasswordEndPoint : _userChangeCurrentPasswordEndPoint;
+  String get forgetPasswordEndpoint =>
+      isAdmin ? _adminForgetPasswordEndPoint : _userForgetPasswordEndPoint;
+  String get changeCurrentPasswordEndpoint => isAdmin
+      ? _adminChangeCurrentPasswordEndPoint
+      : _userChangeCurrentPasswordEndPoint;
 
   String get defaultPhoneOtpVerifyType => _defaultPhoneOtpVerifyType;
   String get defaultResendEmailVerifyType => _defaultResendEmailVerifyType;

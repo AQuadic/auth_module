@@ -176,13 +176,7 @@ class _LoginScreenState extends State<LoginScreen> {
     }
     _isHandlingPostLoginRoute = true;
 
-    final fetchedUser = await cubit.fetchCurrentUser();
-    if (!mounted) {
-      _isHandlingPostLoginRoute = false;
-      return;
-    }
-
-    final user = fetchedUser ?? cubit.state.user;
+    final user = cubit.state.user;
     final shouldCompleteProfile =
         widget.hasCompleteProfile && (user?.isDefaultName ?? false);
 

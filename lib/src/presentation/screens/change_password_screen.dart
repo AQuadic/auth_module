@@ -90,11 +90,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                       Center(
                         child:
                             widget.logo ??
-                            Icon(
-                              CupertinoIcons.lock,
-                              size: 76,
-                              color: color,
-                            ),
+                            Icon(CupertinoIcons.lock, size: 76, color: color),
                       ),
                       const SizedBox(height: 20),
                       Text(

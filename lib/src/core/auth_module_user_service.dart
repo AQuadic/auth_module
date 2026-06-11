@@ -87,8 +87,9 @@ class _AuthUserService {
     }
 
     final storedResetToken = await UserModel.getResetPassToken;
-    final effectiveResetToken =
-        _module._isNotBlank(resetToken) ? resetToken : storedResetToken;
+    final effectiveResetToken = _module._isNotBlank(resetToken)
+        ? resetToken
+        : storedResetToken;
 
     if (!_module._isNotBlank(effectiveResetToken)) {
       return AuthResult.failure(
@@ -307,7 +308,10 @@ class _AuthUserService {
   }) async {
     final currentToken = await _module._getToken();
     if (callApi && currentToken != null && currentToken.isNotEmpty) {
-      await _module._safePost(_module.config.logoutEndpoint, token: currentToken);
+      await _module._safePost(
+        _module.config.logoutEndpoint,
+        token: currentToken,
+      );
     }
 
     if (withFirebase) {

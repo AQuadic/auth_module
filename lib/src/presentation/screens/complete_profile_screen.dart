@@ -64,7 +64,7 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
 
   Future<void> _prefillUserData() async {
     final cubit = context.read<AuthUiCubit>();
-    final user = await cubit.fetchCurrentUser();
+    final user = cubit.state.user ?? await cubit.fetchCurrentUser();
     if (!mounted || user == null) {
       return;
     }

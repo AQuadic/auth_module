@@ -1,12 +1,12 @@
 enum LoginType {
-	emailAndPassword,
-	phoneAndPassword,
-	phoneWithVerificationCloudwa,
-	phoneWithVerificationOtp,
+  emailAndPassword,
+  phoneAndPassword,
+  phoneWithVerificationCloudwa,
+  phoneWithVerificationOtp,
 }
 
 enum ForgetType {
-	email,
-	phoneWithVerificationCloudwa,
-	phoneWithVerificationOtp,
+  email,
+  phoneWithVerificationCloudwa,
+  phoneWithVerificationOtp,
 }
