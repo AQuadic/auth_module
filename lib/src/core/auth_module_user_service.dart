@@ -266,8 +266,12 @@ class _AuthUserService {
 
     try {
       await _module.notificationModule.setToken(currentToken);
-      await _module.notificationModule.addDevice(enabled: enabled);
-      _module._isNotificationEnabled = enabled ?? true;
+      final effectiveEnabled =
+          enabled ?? _module._isNotificationEnabled ?? true;
+      await _module.notificationModule.addDevice(enabled: effectiveEnabled);
+      _module._isNotificationEnabled = effectiveEnabled;
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool('is_notification_enabled', effectiveEnabled);
       return AuthResult.success();
     } catch (e) {
       return AuthResult.failure(e.toString());
@@ -322,6 +326,7 @@ class _AuthUserService {
     _module._firebaseVerificationId = null;
     _module._user = null;
     _module._otpResponse = null;
+    _module._isNotificationEnabled = null;
 
     await _module._tokenStorage.clearToken();
     try {
@@ -331,6 +336,11 @@ class _AuthUserService {
     try {
       await _module.notificationModule.setToken(null);
       await _module.notificationModule.deleteFCMToken();
+    } catch (_) {}
+
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove('is_notification_enabled');
     } catch (_) {}
 
     return AuthResult.success();

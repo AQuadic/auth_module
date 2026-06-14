@@ -4,6 +4,7 @@ import 'package:auth_module/src/core/auth_module_enum.dart';
 import 'package:dio/dio.dart';
 import 'package:cross_file/cross_file.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 export 'auth_module_enum.dart';
 
@@ -105,6 +106,9 @@ class AuthModule {
         config: config,
       );
     }
+
+    final prefs = await SharedPreferences.getInstance();
+    _isNotificationEnabled = prefs.getBool('is_notification_enabled');
 
     _token = await _getToken();
     if (_token != null && _token!.isNotEmpty) {
